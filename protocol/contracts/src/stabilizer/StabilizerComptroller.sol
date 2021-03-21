@@ -109,16 +109,15 @@ contract StabilizerComptroller is StabilizerAccessors, StabilizerToken {
     // FLYWHEEL
 
     /**
-     * @notice The stabilizer's current effective reward rate
-     * @dev In terms of % of the totalUnderlying per day
-     *      Uses EMA floored at the current reserve redemption price and maxed at 1.00
-     * @return Current effective reward rate
+     * @notice Initializes logic for the stabilizer
+     * @dev Initializes oracle to track the ESD price
+     *      Will revert if oracle has already been setup - enforces a single initialization
      */
-    function setup() external onlyOwner {
+    function _setup() internal {
         IOracle oracle = IOracle(registry().oracle());
         address dollar = registry().dollar();
 
-        require(!oracle.setupFor(dollar), "StabilizerComptroller: already setup");
+        require(!oracle.setupFor(dollar), "StabilizerImpl: already setup");
 
         oracle.setup(dollar);
         _state.oracle.ema = Decimal.one();

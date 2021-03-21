@@ -21,10 +21,6 @@ import "../../src/stabilizer/StabilizerComptroller.sol";
 import "./MockStabilizerState.sol";
 
 contract MockStabilizerComptroller is StabilizerComptroller, MockStabilizerState {
-    constructor () public {
-        _state.oracle.ema = Decimal.one();
-    }
-
     function settleE() external {
         super._settle();
     }

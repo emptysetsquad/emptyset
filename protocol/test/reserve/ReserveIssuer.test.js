@@ -18,6 +18,7 @@ describe('ReserveIssuer', function () {
     this.stake = await Stake.new({from: ownerAddress});
     this.issuer = await MockReserveIssuer.new({from: ownerAddress});
     await this.issuer.takeOwnership({from: ownerAddress});
+    await this.issuer.setup({from: ownerAddress});
     await this.issuer.setRegistry(this.registry.address, {from: ownerAddress});
     await this.registry.setStake(this.stake.address, {from: ownerAddress});
     await this.stake.transferOwnership(this.issuer.address, {from: ownerAddress});

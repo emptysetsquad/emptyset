@@ -280,4 +280,22 @@ contract ReserveAccessors is IImplementation, ReserveAdmin {
     function _setOwner(address newOwner) internal {
         _state.implementation.owner = newOwner;
     }
+
+
+    /**
+     * @notice The entered status of the current call
+     * @return entered status
+     */
+    function notEntered() internal view returns (bool) {
+        return _state.implementation.notEntered;
+    }
+
+    /**
+     * @notice Updates the entered status of the current call
+     * @dev Internal only
+     * @param newNotEntered New entered status
+     */
+    function _setNotEntered(bool newNotEntered) internal {
+        _state.implementation.notEntered = newNotEntered;
+    }
 }

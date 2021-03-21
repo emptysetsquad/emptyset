@@ -120,4 +120,50 @@ contract Implementation is IImplementation {
 
         _;
     }
+
+    // NON REENTRANT
+
+    /**
+     * @dev Prevents a contract from calling itself, directly or indirectly.
+     * Calling a `nonReentrant` function from another `nonReentrant`
+     * function is not supported. It is possible to prevent this from happening
+     * by making the `nonReentrant` function external, and make it call a
+     * `private` function that does the actual work.
+     */
+    modifier nonReentrant() {
+        // On the first call to nonReentrant, _notEntered will be true
+        require(notEntered(), "Implementation: reentrant call");
+
+        // Any calls to nonReentrant after this point will fail
+        _setNotEntered(false);
+
+        _;
+
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        _setNotEntered(true);
+    }
+
+    // SETUP
+
+    /**
+     * @notice Hook to surface arbitrary logic to be called after deployment by owner
+     * @dev Governance hook
+     *      Does not ensure that it is only called once because it is permissioned to governance only
+     */
+    function setup() external onlyOwner {
+        // Storing an initial non-zero value makes deployment a bit more
+        // expensive, but in exchange the refund on every call to nonReentrant
+        // will be lower in amount. Since refunds are capped to a percetange of
+        // the total transaction's gas, it is best to keep them low in cases
+        // like this one, to increase the likelihood of the full refund coming
+        // into effect.
+        _setNotEntered(true);
+        _setup();
+    }
+
+    /**
+     * @notice Override to provide addition setup logic per implementation
+     */
+    function _setup() internal { }
 }

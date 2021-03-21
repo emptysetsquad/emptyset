@@ -20,6 +20,7 @@ describe('ReserveSwapper', function () {
     this.tokenB = await MockToken.new("USD//C", "USDC", 6, {from: ownerAddress});
     this.swapper = await MockReserveSwapper.new({from: ownerAddress});
     await this.swapper.takeOwnership({from: ownerAddress});
+    await this.swapper.setup({from: ownerAddress});
     await this.swapper.setRegistry(this.registry.address, {from: ownerAddress});
   });
 

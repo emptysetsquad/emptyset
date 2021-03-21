@@ -27,4 +27,4 @@ import "../common/Implementation.sol";
  * @notice Top-level Stabilizer contract that extends all other stabilizer sub-contracts
  * @dev This contract should be used an implementation contract for an AdminUpgradeabilityProxy
  */
-contract StabilizerImpl is Implementation, StabilizerToken, StabilizerComptroller { }
+contract StabilizerImpl is StabilizerToken, StabilizerComptroller { }

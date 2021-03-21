@@ -20,7 +20,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "../Interfaces.sol";
 import "./ReserveComptroller.sol";
@@ -30,7 +29,7 @@ import "./ReserveState.sol";
  * @title ReserveSwapper
  * @notice Logic for managing outstanding limit orders, allow the reserve to swap its held tokens
  */
-contract ReserveSwapper is ReentrancyGuard, ReserveComptroller {
+contract ReserveSwapper is ReserveComptroller {
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
     using SafeERC20 for IERC20;

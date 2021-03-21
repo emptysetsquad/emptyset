@@ -38,6 +38,11 @@ contract IImplementation {
          * @notice Registry containing mappings for all protocol contracts
          */
         address registry;
+
+        /**
+         * @notice Entered state for tracking call reentrancy
+         */
+        bool notEntered;
     }
 
     /**
@@ -79,4 +84,19 @@ contract IImplementation {
      * @param newOwner New owner contract
      */
     function _setOwner(address newOwner) internal;
+
+    // NON REENTRANT
+
+    /**
+     * @notice The entered status of the current call
+     * @return entered status
+     */
+    function notEntered() internal view returns (bool);
+
+    /**
+     * @notice Updates the entered status of the current call
+     * @dev Internal only
+     * @param newNotEntered New entered status
+     */
+    function _setNotEntered(bool newNotEntered) internal;
 }

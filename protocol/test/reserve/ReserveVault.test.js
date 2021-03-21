@@ -28,6 +28,7 @@ describe('ReserveVault', function () {
     await this.cUsdc.setExchangeRate(ONE_USDC);
     this.vault = await MockReserveVault.new({from: ownerAddress});
     await this.vault.takeOwnership({from: ownerAddress});
+    await this.vault.setup({from: ownerAddress});
     await this.vault.setRegistry(this.registry.address, {from: ownerAddress});
     await this.registry.setUsdc(this.collateral.address, {from: ownerAddress});
     await this.registry.setCUsdc(this.cUsdc.address, {from: ownerAddress});

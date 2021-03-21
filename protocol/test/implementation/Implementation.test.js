@@ -169,4 +169,41 @@ describe('Implementation', function () {
       });
     });
   });
+
+  describe('setup', function () {
+    describe('before set', function () {
+      it('is zero address', async function () {
+        expect(await this.implementation.notEnteredE()).to.be.equal(false);
+      });
+
+      describe('when called', function () {
+        beforeEach('call', async function () {
+          this.result = await this.implementation.setup({from: ownerAddress});
+          this.txHash = this.result.tx
+        });
+
+        it('sets new value', async function () {
+          expect(await this.implementation.notEnteredE()).to.be.equal(true);
+        });
+      });
+
+      describe('not owner', function () {
+        it('reverts', async function () {
+          await expectRevert(
+            this.implementation.setup({from: userAddress}),
+            "Implementation: not owner");
+        });
+      });
+    });
+  });
+
+  describe('reenters', function () {
+    describe('not owner', function () {
+      it('reverts', async function () {
+        await expectRevert(
+          this.implementation.reenters({from: ownerAddress}),
+          "Implementation: reentrant call");
+      });
+    });
+  });
 });
