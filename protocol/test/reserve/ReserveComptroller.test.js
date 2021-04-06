@@ -64,6 +64,33 @@ describe('ReserveComptroller', function () {
       });
     });
 
+    describe('decimal amount', function () {
+      beforeEach(async function () {
+        await this.collateral.mint(userAddress, ONE_USDC.mul(new BN(100000)).addn(1));
+        await this.collateral.approve(this.comptroller.address, ONE_USDC.mul(new BN(100000)).addn(1), {from: userAddress});
+        this.result = await this.comptroller.mint(ONE_UNIT.muln(100000).addn(1), {from: userAddress});
+        this.txHash = this.result.tx;
+      });
+
+      it('mints', async function () {
+        expect(await this.dollar.balanceOf(userAddress)).to.be.bignumber.equal(ONE_UNIT.mul(new BN(100000)).addn(1));
+        expect(await this.collateral.balanceOf(this.comptroller.address)).to.be.bignumber.equal(new BN(0));
+        expect(await this.collateral.balanceOf(this.cUsdc.address)).to.be.bignumber.equal(ONE_USDC.mul(new BN(100000)).addn(1));
+        expect(await this.comptroller.reserveBalance()).to.be.bignumber.equal(ONE_USDC.mul(new BN(100000)).addn(1));
+        expect((await this.comptroller.reserveRatio()).value).to.be.bignumber.equal("1000000000009999999");
+        expect((await this.comptroller.redeemPrice()).value).to.be.bignumber.equal(ONE_UNIT);
+      });
+
+      it('emits Mint event', async function () {
+        const event = await expectEvent.inTransaction(this.txHash, MockReserveComptroller, 'Mint', {
+          account: userAddress
+        });
+
+        expect(event.args.mintAmount).to.be.bignumber.equal(ONE_UNIT.mul(new BN(100000)).addn(1));
+        expect(event.args.costAmount).to.be.bignumber.equal(ONE_USDC.mul(new BN(100000)).addn(1));
+      });
+    });
+
     describe('rewards accrue', function () {
       beforeEach(async function () {
         await this.collateral.mint(userAddress, ONE_USDC.mul(new BN(200000)));

@@ -108,6 +108,10 @@ contract ReserveComptroller is ReentrancyGuard, ReserveAccessors, ReserveVault {
      */
     function mint(uint256 amount) external nonReentrant {
         uint256 costAmount = _toUsdcAmount(amount);
+
+        // Take the ceiling to ensure no "free" ESD is minted
+        costAmount = _fromUsdcAmount(costAmount) == amount ? costAmount : costAmount.add(1);
+
         _transferFrom(registry().usdc(), msg.sender, address(this), costAmount);
         _supplyVault(costAmount);
         _mintDollar(msg.sender, amount);
