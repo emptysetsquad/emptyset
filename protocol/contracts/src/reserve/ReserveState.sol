@@ -130,7 +130,7 @@ contract ReserveAdmin is Implementation, ReserveState {
 
     /**
      * @notice Current redemption tax for artificially lowering the {redeemPrice}
-     * @return Reserve debt
+     * @return Redemption tax
      */
     function redemptionTax() public view returns (Decimal.D256 memory) {
         return _state.redemptionTax;

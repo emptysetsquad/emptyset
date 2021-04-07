@@ -81,7 +81,7 @@ contract ReserveComptroller is ReentrancyGuard, ReserveAccessors, ReserveVault {
     }
 
     /**
-     * @notice Rhe ratio of the {reserveBalance} to total ESD issuance
+     * @notice The ratio of the {reserveBalance} to total ESD issuance
      * @dev Assumes 1 ESD = 1 USDC, normalizing for decimals
      * @return Reserve ratio
      */
