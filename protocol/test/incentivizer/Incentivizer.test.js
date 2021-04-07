@@ -6,6 +6,8 @@ const { expect } = require('chai');
 const Stake = contract.fromArtifact('Stake');
 const MockToken = contract.fromArtifact('MockToken');
 const Incentivizer = contract.fromArtifact('Incentivizer');
+const Registry = contract.fromArtifact('Registry');
+const MockContract = contract.fromArtifact('MockContract');
 
 const ONE_BIP = new BN(10).pow(new BN(14));
 const ONE_UNIT = ONE_BIP.mul(new BN(10000));
@@ -18,12 +20,15 @@ describe('Incentivizer', function () {
   this.retries(10);
   this.timeout(5000);
 
-  const [ ownerAddress, userAddress, userAddress2, reserveAddress ] = accounts;
+  const [ ownerAddress, userAddress, userAddress2 ] = accounts;
 
   beforeEach(async function () {
     this.underlying = await MockToken.new("Uniswap V2", "UNI-V2", 18, {from: ownerAddress});
     this.reward = await Stake.new({from: ownerAddress});
-    this.incentivizer = await Incentivizer.new(this.underlying.address, this.reward.address, reserveAddress, {from: ownerAddress});
+    this.registry = await Registry.new({from: ownerAddress});
+    this.reserve = await MockContract.new({from: ownerAddress});
+    this.incentivizer = await Incentivizer.new(this.underlying.address, this.reward.address, this.registry.address, {from: ownerAddress});
+    await this.registry.setReserve(this.reserve.address, {from: ownerAddress});
   });
 
   describe('rescue', function () {
@@ -62,7 +67,7 @@ describe('Incentivizer', function () {
 
         it('transfers', async function () {
           expect(await this.underlying.balanceOf(this.incentivizer.address)).to.be.bignumber.equal(ONE_UNIT.muln(1000));
-          expect(await this.underlying.balanceOf(reserveAddress)).to.be.bignumber.equal(ONE_UNIT.muln(100));
+          expect(await this.underlying.balanceOf(this.reserve.address)).to.be.bignumber.equal(ONE_UNIT.muln(100));
         });
 
         it('emits Rescue event', async function () {
@@ -83,7 +88,7 @@ describe('Incentivizer', function () {
 
       it('transfers', async function () {
         expect(await this.reward.balanceOf(this.incentivizer.address)).to.be.bignumber.equal(new BN(0));
-        expect(await this.reward.balanceOf(reserveAddress)).to.be.bignumber.equal(ONE_UNIT.muln(1000));
+        expect(await this.reward.balanceOf(this.reserve.address)).to.be.bignumber.equal(ONE_UNIT.muln(1000));
       });
 
       it('emits Rescue event', async function () {
@@ -170,7 +175,7 @@ describe('Incentivizer', function () {
 
       it('updates', async function () {
         expect(await this.reward.balanceOf(this.incentivizer.address)).to.be.bignumber.equal(ONE_UNIT.muln(500));
-        expect(await this.reward.balanceOf(reserveAddress)).to.be.bignumber.equal(ONE_UNIT.muln(500));
+        expect(await this.reward.balanceOf(this.reserve.address)).to.be.bignumber.equal(ONE_UNIT.muln(500));
         expect(await this.incentivizer.rewardRate()).to.be.bignumber.equal(ONE_UNIT);
         expect(await this.incentivizer.rewardComplete()).to.be.bignumber.equal(this.completed);
         expect(await this.incentivizer.rewardUpdated()).to.be.bignumber.equal(this.now);
@@ -202,7 +207,7 @@ describe('Incentivizer', function () {
 
         it('updates', async function () {
           expect(await this.reward.balanceOf(this.incentivizer.address)).to.be.bignumber.equal(ONE_UNIT.muln(800));
-          expect(await this.reward.balanceOf(reserveAddress)).to.be.bignumber.equal(ONE_UNIT.muln(200));
+          expect(await this.reward.balanceOf(this.reserve.address)).to.be.bignumber.equal(ONE_UNIT.muln(200));
           expect(await this.incentivizer.rewardRate()).to.be.bignumber.equal(ONE_UNIT);
           expect(await this.incentivizer.rewardComplete()).to.be.bignumber.equal(this.completed);
           expect(await this.incentivizer.rewardUpdated()).to.be.bignumber.equal(this.now.addn(100));
@@ -273,7 +278,7 @@ describe('Incentivizer', function () {
 
         it('updates', async function () {
           expect(await this.reward.balanceOf(this.incentivizer.address)).to.be.bignumber.equal(ONE_UNIT.muln(1000));
-          expect(await this.reward.balanceOf(reserveAddress)).to.be.bignumber.equal(ONE_UNIT.muln(1000));
+          expect(await this.reward.balanceOf(this.reserve.address)).to.be.bignumber.equal(ONE_UNIT.muln(1000));
           expect(await this.incentivizer.rewardRate()).to.be.bignumber.equal(ONE_UNIT);
           expect(await this.incentivizer.rewardComplete()).to.be.bignumber.equal(this.completed);
           expect(await this.incentivizer.rewardUpdated()).to.be.bignumber.equal(this.now.addn(1000));
@@ -1024,7 +1029,7 @@ describe('Incentivizer', function () {
     beforeEach(async function () {
       this.underlying = await MockToken.new("Empty Set Dollar", "ESD", 18, {from: ownerAddress});
       this.reward = this.underlying;
-      this.incentivizer = await Incentivizer.new(this.underlying.address, this.reward.address, reserveAddress, {from: ownerAddress});
+      this.incentivizer = await Incentivizer.new(this.underlying.address, this.reward.address, this.registry.address, {from: ownerAddress});
     });
 
     describe('stake', function () {
