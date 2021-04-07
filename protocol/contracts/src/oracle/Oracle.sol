@@ -287,7 +287,7 @@ contract Oracle is IOracle, Ownable {
         if (decimals > 6) {
             return price.mul(10 ** (uint256(decimals) - 6));
         } else if (decimals < 6) {
-            return price.mul(10 ** (6 - uint256(decimals)));
+            return price.div(10 ** (6 - uint256(decimals)));
         }
         return price;
     }
