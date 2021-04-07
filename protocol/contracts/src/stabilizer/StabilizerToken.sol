@@ -91,8 +91,8 @@ contract StabilizerToken is StabilizerAccessors {
      * return Whether the transfer was successful
      */
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
-        _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, allowance(sender, msg.sender).sub(amount, "StabilizerToken: transfer amount exceeds allowance"));
+        _transfer(sender, recipient, amount);
         return true;
     }
 
