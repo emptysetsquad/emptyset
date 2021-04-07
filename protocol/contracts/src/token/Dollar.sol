@@ -17,7 +17,6 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "./Permittable.sol";
 import "../Interfaces.sol";
@@ -27,7 +26,7 @@ import "../Interfaces.sol";
  * @notice ESD stablecoin ERC20 token
  * @dev Owned by the reserve, which is solely allowed to mint ESD to itself and to burn its held ESD
  */
-contract Dollar is IManagedToken, Ownable, ERC20Detailed, Permittable {
+contract Dollar is IManagedToken, Ownable, Permittable {
 
     /**
      * @notice Constructs the Dollar contract

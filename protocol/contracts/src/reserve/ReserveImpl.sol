@@ -17,8 +17,6 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "./ReserveState.sol";
-import "./ReserveComptroller.sol";
 import "./ReserveSwapper.sol";
 import "../common/Implementation.sol";
 import "./ReserveIssuer.sol";
