@@ -159,7 +159,8 @@ contract Incentivizer is Ownable, ReentrancyGuard {
         (rewardRate, rewardComplete, rewardUpdated) = (rate, complete, block.timestamp);
 
         // Return rewards in excess of the required amount
-        rewardToken.safeTransfer(reserve, _verifyRewardBalance());
+        (, uint256 excessRewards) = _verifyBalance();
+        rewardToken.safeTransfer(reserve, excessRewards);
 
         emit RewardProgramUpdate(rate, complete);
     }
@@ -174,13 +175,36 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @param amount Amount to withdraw
      */
     function rescue(address token, uint256 amount) external nonReentrant onlyOwner {
-        require(token != address(underlyingToken), "Incentivizer: underlying token");
-
         IERC20(token).safeTransfer(reserve, amount);
 
-        if (token == address(rewardToken)) _verifyRewardBalance();
+        if (token == address(rewardToken) || token == address(underlyingToken)) {
+            _verifyBalance();
+        }
 
         emit Rescue(token, amount);
+    }
+
+    /**
+     * @notice Verifies the underlying and reward balances of this contract cover all outstanding liabilities
+     * @dev Internal only - helper
+     *      Reverts if there are any insufficient funds
+     * @return (excess underlying balance, excess reward balance), values are equal if underlyingToken == rewardToken
+     */
+    function _verifyBalance() private view returns (uint256, uint256) {
+        uint256 rewardTokenBalance = rewardToken.balanceOf(address(this));
+        uint256 underlyingTokenBalance = underlyingToken.balanceOf(address(this));
+
+        uint256 underlyingRequirement = totalUnderlying;
+        uint256 rewardRequirement = totalReward.add(totalProvisionedReward());
+
+        return (
+            underlyingTokenBalance
+                .sub(totalUnderlying, "Incentivizer: insufficient underlying")
+                .sub(underlyingToken == rewardToken ? rewardRequirement : 0, "Incentivizer: insufficient rewards"),
+            rewardTokenBalance
+                .sub(rewardRequirement, "Incentivizer: insufficient rewards")
+                .sub(underlyingToken == rewardToken ? underlyingRequirement : 0, "Incentivizer: insufficient underlying")
+        );
     }
 
     /**
@@ -188,24 +212,8 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @dev Internal only - helper
      *      Reverts if there is insufficient reward token funds
      */
-    function _verifyRewardBalance() private view returns (uint256) {
-        return _totalRewardBalance()
-        .sub(totalReward, "Incentivizer: insufficient rewards")
-        .sub(totalProvisionedReward(), "Incentivizer: insufficient rewards");
-    }
-
-    /**
-     * @notice Total reward token holdings of this contract
-     * @dev If reward token == underlying token, this will subtract the total underlying amount from the balance
-     * @dev Internal only - helper
-     */
-    function _totalRewardBalance() private view returns (uint256) {
-        if (underlyingToken == rewardToken) {
-            uint256 totalBalance = rewardToken.balanceOf(address(this));
-            return totalBalance > totalUnderlying ? totalBalance - totalUnderlying : 0;
-        }
-
-        return rewardToken.balanceOf(address(this));
+    function _verifyUnderlyingBalance() private view {
+        require(underlyingToken.balanceOf(address(this)) > totalUnderlying, "Incentivizer: insufficient underlying");
     }
 
     // FLYWHEEL
