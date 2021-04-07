@@ -5,21 +5,25 @@ const { expect } = require('chai');
 
 const RegistryAccessor = contract.fromArtifact('RegistryAccessor');
 const Registry = contract.fromArtifact('Registry');
+const Timelock = contract.fromArtifact('Timelock');
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 describe('RegistryAccessor', function () {
-  const [ ownerAddress, userAddress, timelockA, timelockB] = accounts;
+  const [ ownerAddress, userAddress] = accounts;
 
   beforeEach(async function () {
+    this.timelockA = await Timelock.new(ownerAddress, 86400 * 2, {from: ownerAddress});
+    this.timelockB = await Timelock.new(ownerAddress, 86400 * 2, {from: ownerAddress});
+
     this.accessor = await RegistryAccessor.new({from: ownerAddress});
     
     this.registryA = await Registry.new({from: ownerAddress});
-    await this.registryA.setTimelock(timelockA, {from: ownerAddress});
+    await this.registryA.setTimelock(this.timelockA.address, {from: ownerAddress});
     this.registryB = await Registry.new({from: ownerAddress});
-    await this.registryB.setTimelock(timelockA, {from: ownerAddress});
+    await this.registryB.setTimelock(this.timelockA.address, {from: ownerAddress});
     this.registryC = await Registry.new({from: ownerAddress});
-    await this.registryC.setTimelock(timelockB, {from: ownerAddress});
+    await this.registryC.setTimelock(this.timelockB.address, {from: ownerAddress});
   });
 
   describe('setRegistry', function () {

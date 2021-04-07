@@ -8,6 +8,7 @@ const Dollar = contract.fromArtifact('Dollar');
 const Registry = contract.fromArtifact('Registry');
 const MockCErc20 = contract.fromArtifact('MockCErc20');
 const MockReserveComptroller = contract.fromArtifact('MockReserveComptroller');
+const MockSettableStabilizer = contract.fromArtifact('MockSettableStabilizer');
 
 const ONE_USDC = new BN(1000000);
 const ONE_BIP = new BN(10).pow(new BN(14));
@@ -17,7 +18,7 @@ describe('ReserveComptroller', function () {
   this.retries(10)
   this.timeout(5000)
 
-  const [ ownerAddress, userAddress, comptroller, burnAddress, stabilizerAddress ] = accounts;
+  const [ ownerAddress, userAddress, burnAddress, comptroller ] = accounts;
 
   beforeEach(async function () {
     this.registry = await Registry.new({from: ownerAddress});
@@ -26,14 +27,16 @@ describe('ReserveComptroller', function () {
     this.cUsdc = await MockCErc20.new({from: ownerAddress});
     await this.cUsdc.set(this.collateral.address, comptroller);
     await this.cUsdc.setExchangeRate(ONE_USDC);
-    this.comptroller = await MockReserveComptroller.new({from: ownerAddress}, {from: ownerAddress});
+    this.comptroller = await MockReserveComptroller.new({from: ownerAddress});
     await this.comptroller.takeOwnership({from: ownerAddress});
     await this.comptroller.setRegistry(this.registry.address, {from: ownerAddress});
+    this.stabilizer = await MockSettableStabilizer.new({from: ownerAddress});
+    await this.stabilizer.set(this.comptroller.address);
     await this.dollar.transferOwnership(this.comptroller.address, {from: ownerAddress});
     await this.registry.setUsdc(this.collateral.address, {from: ownerAddress});
     await this.registry.setCUsdc(this.cUsdc.address, {from: ownerAddress});
     await this.registry.setDollar(this.dollar.address, {from: ownerAddress});
-    await this.registry.setStabilizer(stabilizerAddress, {from: ownerAddress});
+    await this.registry.setStabilizer(this.stabilizer.address, {from: ownerAddress});
   });
 
   describe('mint', function () {
@@ -266,12 +269,12 @@ describe('ReserveComptroller', function () {
     describe('under limit', function () {
       describe('single', function () {
         beforeEach(async function () {
-          this.result = await this.comptroller.borrow(ONE_UNIT.mul(new BN(10)), {from: stabilizerAddress});
+          this.result = await this.stabilizer.borrow(ONE_UNIT.mul(new BN(10)), {from: ownerAddress});
           this.txHash = this.result.tx;
         });
 
         it('borrows', async function () {
-          expect(await this.dollar.balanceOf(stabilizerAddress)).to.be.bignumber.equal(ONE_UNIT.mul(new BN(10)));
+          expect(await this.dollar.balanceOf(this.stabilizer.address)).to.be.bignumber.equal(ONE_UNIT.mul(new BN(10)));
           expect(await this.collateral.balanceOf(this.comptroller.address)).to.be.bignumber.equal(new BN(0));
           expect(await this.collateral.balanceOf(this.cUsdc.address)).to.be.bignumber.equal(ONE_USDC.mul(new BN(100000)));
           expect(await this.comptroller.reserveBalance()).to.be.bignumber.equal(ONE_USDC.mul(new BN(100000)));
@@ -295,14 +298,14 @@ describe('ReserveComptroller', function () {
 
       describe('multiple', function () {
         beforeEach(async function () {
-          await this.comptroller.borrow(ONE_UNIT.mul(new BN(100)), {from: stabilizerAddress});
+          await this.stabilizer.borrow(ONE_UNIT.mul(new BN(100)), {from: ownerAddress});
 
-          this.result = await this.comptroller.borrow(ONE_UNIT.mul(new BN(10)), {from: stabilizerAddress});
+          this.result = await this.stabilizer.borrow(ONE_UNIT.mul(new BN(10)), {from: ownerAddress});
           this.txHash = this.result.tx;
         });
 
         it('borrows', async function () {
-          expect(await this.dollar.balanceOf(stabilizerAddress)).to.be.bignumber.equal(ONE_UNIT.mul(new BN(110)));
+          expect(await this.dollar.balanceOf(this.stabilizer.address)).to.be.bignumber.equal(ONE_UNIT.mul(new BN(110)));
           expect(await this.collateral.balanceOf(this.comptroller.address)).to.be.bignumber.equal(new BN(0));
           expect(await this.collateral.balanceOf(this.cUsdc.address)).to.be.bignumber.equal(ONE_USDC.mul(new BN(100000)));
           expect(await this.comptroller.reserveBalance()).to.be.bignumber.equal(ONE_USDC.mul(new BN(100000)));
@@ -326,15 +329,15 @@ describe('ReserveComptroller', function () {
 
       describe('refresh', function () {
         beforeEach(async function () {
-          await this.comptroller.borrow(ONE_UNIT.mul(new BN(200)), {from: stabilizerAddress});
+          await this.stabilizer.borrow(ONE_UNIT.mul(new BN(200)), {from: ownerAddress});
           await time.increase(60 * 60 * 12); // advance 12 hours
 
-          this.result = await this.comptroller.borrow(ONE_UNIT.mul(new BN(10)), {from: stabilizerAddress});
+          this.result = await this.stabilizer.borrow(ONE_UNIT.mul(new BN(10)), {from: ownerAddress});
           this.txHash = this.result.tx;
         });
 
         it('borrows', async function () {
-          expect(await this.dollar.balanceOf(stabilizerAddress)).to.be.bignumber.equal(ONE_UNIT.mul(new BN(210)));
+          expect(await this.dollar.balanceOf(this.stabilizer.address)).to.be.bignumber.equal(ONE_UNIT.mul(new BN(210)));
           expect(await this.collateral.balanceOf(this.comptroller.address)).to.be.bignumber.equal(new BN(0));
           expect(await this.collateral.balanceOf(this.cUsdc.address)).to.be.bignumber.equal(ONE_USDC.mul(new BN(100000)));
           expect(await this.comptroller.reserveBalance()).to.be.bignumber.equal(ONE_USDC.mul(new BN(100000)));
@@ -361,32 +364,32 @@ describe('ReserveComptroller', function () {
       describe('single', function () {
         it('reverts', async function () {
           await expectRevert(
-            this.comptroller.borrow(ONE_UNIT.mul(new BN(250)), {from: stabilizerAddress}),
+            this.stabilizer.borrow(ONE_UNIT.mul(new BN(250)), {from: ownerAddress}),
             "ReserveComptroller: insufficient borrowable");
         });
       });
 
       describe('multiple', function () {
         beforeEach(async function () {
-          await this.comptroller.borrow(ONE_UNIT.mul(new BN(100)), {from: stabilizerAddress})
+          await this.stabilizer.borrow(ONE_UNIT.mul(new BN(100)), {from: ownerAddress})
         });
 
         it('reverts', async function () {
           await expectRevert(
-            this.comptroller.borrow(ONE_UNIT.mul(new BN(150)), {from: stabilizerAddress}),
+            this.stabilizer.borrow(ONE_UNIT.mul(new BN(150)), {from: ownerAddress}),
             "ReserveComptroller: insufficient borrowable");
         });
       });
 
       describe('refresh', function () {
         beforeEach(async function () {
-          await this.comptroller.borrow(ONE_UNIT.mul(new BN(200)), {from: stabilizerAddress});
+          await this.stabilizer.borrow(ONE_UNIT.mul(new BN(200)), {from: ownerAddress});
           await time.increase(60 * 60 * 12); // advance 12 hours
         });
 
         it('reverts', async function () {
           await expectRevert(
-            this.comptroller.borrow(ONE_UNIT.mul(new BN(110)), {from: stabilizerAddress}),
+            this.stabilizer.borrow(ONE_UNIT.mul(new BN(110)), {from: ownerAddress}),
             "ReserveComptroller: insufficient borrowable");
         });
       });
@@ -406,7 +409,7 @@ describe('ReserveComptroller', function () {
       await this.collateral.mint(userAddress, ONE_USDC.mul(new BN(100000)));
       await this.collateral.approve(this.comptroller.address, ONE_USDC.mul(new BN(100000)), {from: userAddress});
       await this.comptroller.mint(ONE_UNIT.mul(new BN(100000)), {from: userAddress});
-      await this.comptroller.borrow(ONE_UNIT.mul(new BN(100)), {from: stabilizerAddress});
+      await this.stabilizer.borrow(ONE_UNIT.mul(new BN(100)), {from: ownerAddress});
       await this.dollar.approve(this.comptroller.address, ONE_UNIT.mul(new BN(100)), {from: userAddress});
     });
 
@@ -418,7 +421,7 @@ describe('ReserveComptroller', function () {
 
       it('settles', async function () {
         expect(await this.dollar.balanceOf(userAddress)).to.be.bignumber.equal(ONE_UNIT.mul(new BN(99900)));
-        expect(await this.dollar.balanceOf(stabilizerAddress)).to.be.bignumber.equal(ONE_UNIT.mul(new BN(100)));
+        expect(await this.dollar.balanceOf(this.stabilizer.address)).to.be.bignumber.equal(ONE_UNIT.mul(new BN(100)));
         expect(await this.dollar.balanceOf(this.comptroller.address)).to.be.bignumber.equal(new BN(0));
         expect(await this.collateral.balanceOf(this.comptroller.address)).to.be.bignumber.equal(new BN(0));
         expect(await this.collateral.balanceOf(this.cUsdc.address)).to.be.bignumber.equal(ONE_USDC.mul(new BN(99900)));

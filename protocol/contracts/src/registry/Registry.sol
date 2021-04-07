@@ -18,6 +18,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../Interfaces.sol";
 
 /**
@@ -78,7 +79,7 @@ contract Registry is IRegistry, Ownable {
     address public timelock;
 
     /**
-     * @notice Migration contract to bride v1 assets with current system
+     * @notice Migration contract to bridge v1 assets with current system
      */
     address public migrator;
 
@@ -89,7 +90,7 @@ contract Registry is IRegistry, Ownable {
      * @dev Owner only - governance hook
      * @param newValue New address to register
      */
-    function setUsdc(address newValue) external onlyOwner {
+    function setUsdc(address newValue) external validate(newValue) onlyOwner {
         usdc = newValue;
         emit Registration("USDC", newValue);
     }
@@ -99,7 +100,7 @@ contract Registry is IRegistry, Ownable {
      * @dev Owner only - governance hook
      * @param newValue New address to register
      */
-    function setCUsdc(address newValue) external onlyOwner {
+    function setCUsdc(address newValue) external validate(newValue) onlyOwner {
         cUsdc = newValue;
         emit Registration("CUSDC", newValue);
     }
@@ -109,7 +110,7 @@ contract Registry is IRegistry, Ownable {
      * @dev Owner only - governance hook
      * @param newValue New address to register
      */
-    function setDollar(address newValue) external onlyOwner {
+    function setDollar(address newValue) external validate(newValue) onlyOwner {
         dollar = newValue;
         emit Registration("DOLLAR", newValue);
     }
@@ -119,7 +120,7 @@ contract Registry is IRegistry, Ownable {
      * @dev Owner only - governance hook
      * @param newValue New address to register
      */
-    function setStake(address newValue) external onlyOwner {
+    function setStake(address newValue) external validate(newValue) onlyOwner {
         stake = newValue;
         emit Registration("STAKE", newValue);
     }
@@ -129,7 +130,7 @@ contract Registry is IRegistry, Ownable {
      * @dev Owner only - governance hook
      * @param newValue New address to register
      */
-    function setReserve(address newValue) external onlyOwner {
+    function setReserve(address newValue) external validate(newValue) onlyOwner {
         reserve = newValue;
         emit Registration("RESERVE", newValue);
     }
@@ -139,7 +140,7 @@ contract Registry is IRegistry, Ownable {
      * @dev Owner only - governance hook
      * @param newValue New address to register
      */
-    function setStabilizer(address newValue) external onlyOwner {
+    function setStabilizer(address newValue) external validate(newValue) onlyOwner {
         stabilizer = newValue;
         emit Registration("STABILIZER", newValue);
     }
@@ -149,7 +150,7 @@ contract Registry is IRegistry, Ownable {
      * @dev Owner only - governance hook
      * @param newValue New address to register
      */
-    function setOracle(address newValue) external onlyOwner {
+    function setOracle(address newValue) external validate(newValue) onlyOwner {
         oracle = newValue;
         emit Registration("ORACLE", newValue);
     }
@@ -159,7 +160,7 @@ contract Registry is IRegistry, Ownable {
      * @dev Owner only - governance hook
      * @param newValue New address to register
      */
-    function setGovernor(address newValue) external onlyOwner {
+    function setGovernor(address newValue) external validate(newValue) onlyOwner {
         governor = newValue;
         emit Registration("GOVERNOR", newValue);
     }
@@ -170,7 +171,7 @@ contract Registry is IRegistry, Ownable {
      *      Does not automatically update the owner of all owned protocol contracts
      * @param newValue New address to register
      */
-    function setTimelock(address newValue) external onlyOwner {
+    function setTimelock(address newValue) external validate(newValue) onlyOwner {
         timelock = newValue;
         emit Registration("TIMELOCK", newValue);
     }
@@ -180,8 +181,20 @@ contract Registry is IRegistry, Ownable {
      * @dev Owner only - governance hook
      * @param newValue New address to register
      */
-    function setMigrator(address newValue) external onlyOwner {
+    function setMigrator(address newValue) external validate(newValue) onlyOwner {
         migrator = newValue;
         emit Registration("MIGRATOR", newValue);
+    }
+
+    /**
+     * @notice Ensures the newly supplied value is a deployed contract
+     * @param newValue New address to validate
+     */
+    //TODO: Add this check to setRegistry in Implementation and possibly other setters as well
+    modifier validate(address newValue) {
+        require(newValue != address(this), "Registry: this");
+        require(Address.isContract(newValue), "Registry: not contract");
+
+        _;
     }
 }
