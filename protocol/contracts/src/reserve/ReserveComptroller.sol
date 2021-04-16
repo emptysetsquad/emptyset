@@ -47,22 +47,6 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
     event Redeem(address indexed account, uint256 costAmount, uint256 redeemAmount);
 
     /**
-     * @notice Emitted when the stabilizer borrows `amount` ESD from the reserve
-     */
-    event Borrow(uint256 amount);
-
-    /**
-     * @notice Emitted when `account` settles `settleAmount` ESD of the reserve's debt for `costAmount` USDC
-     */
-    event Settle(address indexed account, uint256 settleAmount, uint256 proceedAmount);
-
-    /**
-     * @notice Per-day borrow limit expressed as a percentage of total supply
-     * @dev Represents limit * 10^18
-     */
-    uint256 private constant DAILY_BORROW_LIMIT = 0.002e18; // 107% APY
-
-    /**
      * @notice Helper constant to convert ESD to USDC and vice versa
      */
     uint256 private constant USDC_DECIMAL_DIFF = 1e12;
@@ -97,7 +81,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @return Current ESD redemption price
      */
     function redeemPrice() public view returns (Decimal.D256 memory) {
-        return Decimal.min(reserveRatio(), Decimal.one()).subOrZero(redemptionTax());
+        return Decimal.min(reserveRatio(), Decimal.one());
     }
 
     /**
@@ -138,45 +122,6 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
         emit Redeem(msg.sender, amount, redeemAmount);
     }
 
-    /**
-     * @notice Allows the stabilizer to mint `amount` ESD to itself, while incrementing reserve debt equivalently
-     * @dev Non-reentrant
-     *      Only callable by the stabilizer
-     *      Increments reserve debt by `amount`
-     * @param amount Amount of ESD to borrow
-     */
-    function borrow(uint256 amount) external nonReentrant {
-        require(msg.sender == registry().stabilizer(), "ReserveComptroller: not stabilizer");
-
-        _syncBorrowed(amount);
-        _incrementDebt(amount);
-
-        _mintDollar(registry().stabilizer(), amount);
-
-        emit Borrow(amount);
-    }
-
-    /**
-     * @notice Burns `amount` ESD from the caller in exchange for equivalent amount of USDC
-     * @dev Non-reentrant
-     *      Normalizes for decimals
-     *      Offsets `amount` of the reserve debt from borrowing
-     *      Not available if there's insufficient debt
-     * @param amount Amount of ESD to burn
-     */
-    function settle(uint256 amount) external nonReentrant {
-        _decrementDebt(amount, "ReserveComptroller: insufficient debt");
-
-        uint256 proceedAmount = _toUsdcAmount(amount);
-
-        _transferFrom(registry().dollar(), msg.sender, address(this), amount);
-        _burnDollar(amount);
-        _redeemVault(proceedAmount);
-        _transfer(registry().usdc(), msg.sender, proceedAmount);
-
-        emit Settle(msg.sender, amount, proceedAmount);
-    }
-
     // INTERNAL
 
     /**
@@ -207,7 +152,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @param token Token to get the balance for
      * @param account Account to get the balance of
      */
-    function _balanceOf(address token, address account) private view returns (uint256) {
+    function _balanceOf(address token, address account) internal view returns (uint256) {
         return IERC20(token).balanceOf(account);
     }
 
@@ -216,7 +161,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @dev Internal only
      * @param token Token to get the total supply of
      */
-    function _totalSupply(address token) private view returns (uint256) {
+    function _totalSupply(address token) internal view returns (uint256) {
         return IERC20(token).totalSupply();
     }
 
@@ -251,7 +196,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @param dec18Amount 18-decimal ERC20 amount
      * @return 6-decimals ERC20 amount
      */
-    function _toUsdcAmount(uint256 dec18Amount) private pure returns (uint256) {
+    function _toUsdcAmount(uint256 dec18Amount) internal pure returns (uint256) {
         return dec18Amount.div(USDC_DECIMAL_DIFF);
     }
 
@@ -262,34 +207,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @param usdcAmount 6-decimal ERC20 amount
      * @return 18-decimals ERC20 amount
      */
-    function _fromUsdcAmount(uint256 usdcAmount) private pure returns (uint256) {
+    function _fromUsdcAmount(uint256 usdcAmount) internal pure returns (uint256) {
         return usdcAmount.mul(USDC_DECIMAL_DIFF);
-    }
-
-    /**
-     * @notice Updates the borrow controller for a new borrow
-     * @dev Private only
-     *      Manages a sliding-window rate-limiter with a per-day borrow limit of {DAILY_BORROW_LIMIT},
-     *      measured as a percentage of total ESD supply
-     *      Reverts if borrow exceeds limit
-     * @param borrowAmount New borrow amount in ESD
-     */
-    function _syncBorrowed(uint256 borrowAmount) private {
-        ReserveTypes.BorrowController memory controller = _borrowController();
-        uint256 totalSupply = _totalSupply(registry().dollar());
-        uint256 dailyBorrowLimit = Decimal.D256({value: DAILY_BORROW_LIMIT}).mul(totalSupply).asUint256();
-
-        // Free
-        uint256 freed = TimeUtils.secondsToDays(now.sub(controller.last)).mul(dailyBorrowLimit).asUint256();
-        uint256 newBorrowed = controller.borrowed > freed ? controller.borrowed.sub(freed) : 0;
-
-        // Delta
-        newBorrowed = newBorrowed.add(borrowAmount);
-
-        // Commit
-        _updateBorrowController(newBorrowed, now);
-
-        // Limit
-        require(_borrowController().borrowed <= dailyBorrowLimit, "ReserveComptroller: insufficient borrowable");
     }
 }

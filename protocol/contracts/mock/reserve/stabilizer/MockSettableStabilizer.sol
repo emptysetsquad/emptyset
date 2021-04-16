@@ -1,5 +1,5 @@
 /*
-    Copyright 2020, 2021 Empty Set Squad <emptysetsquad@protonmail.com>
+    Copyright 2021 Empty Set Squad <emptysetsquad@protonmail.com>
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -17,22 +17,16 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
-import "../../src/Interfaces.sol";
+import "../../../src/Interfaces.sol";
 
-contract TestnetUSDC is ERC20Detailed, ERC20Burnable, IUSDC {
-    constructor()
-    ERC20Detailed("USD//C", "USDC", 6)
-    public
-    { }
+contract MockSettableStabilizer {
+    IReserve internal _reserve;
 
-    function mint(address account, uint256 amount) external returns (bool) {
-        _mint(account, amount);
-        return true;
+    function set(IReserve reserve) external {
+        _reserve = reserve;
     }
 
-    function isBlacklisted(address account) external view returns (bool) {
-        return false;
+    function borrow(uint256 amount) external {
+        _reserve.borrow(amount);
     }
 }

@@ -17,16 +17,11 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../src/Interfaces.sol";
+import "../../../src/reserve/stabilizer/ReserveStabilizer.sol";
+import "./MockReserveStabilizerState.sol";
+import "../MockReserveComptroller.sol";
 
-contract MockSettableStabilizer {
-    IReserve internal _reserve;
 
-    function set(IReserve reserve) external {
-        _reserve = reserve;
-    }
+contract MockReserveStabilizer is ReserveStabilizer, MockReserveStabilizerState, MockReserveComptroller {
 
-    function borrow(uint256 amount) external {
-        _reserve.borrow(amount);
-    }
 }

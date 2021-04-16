@@ -20,21 +20,6 @@ pragma experimental ABIEncoderV2;
 import "../../src/reserve/ReserveState.sol";
 
 contract MockReserveState is ReserveAccessors {
-    function incrementDebtE(uint256 amount) external {
-        super._incrementDebt(amount);
-    }
-
-    function decrementDebtE(uint256 amount, string calldata reason) external {
-        super._decrementDebt(amount, reason);
-    }
-
-    function borrowControllerE() external view returns (ReserveTypes.BorrowController memory) {
-        return super._borrowController();
-    }
-
-    function updateBorrowControllerE(uint256 newBorrowed, uint256 newLast) external {
-        super._updateBorrowController(newBorrowed, newLast);
-    }
 
     // SWAPPER
 

@@ -23,7 +23,7 @@ import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '../lib/UniswapV2OracleLibrary.sol';
 import '../lib/UniswapV2Library.sol';
 import "../lib/Decimal.sol";
-import "../Interfaces.sol";
+import "../StabilizerInterfaces.sol";
 
 /**
  * @title Oracle

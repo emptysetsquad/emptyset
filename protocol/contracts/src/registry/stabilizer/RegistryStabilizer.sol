@@ -18,14 +18,14 @@ pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "../Interfaces.sol";
+import "../../Interfaces.sol";
 
 /**
- * @title Registry
+ * @title RegistryStabilizer
  * @notice Single source of truth for the addresses of all contracts int he protocol
  * @dev Should be governance-owned to allow contracts addresses to change by vote
  */
-contract Registry is IRegistry, Ownable {
+contract RegistryStabilizer is IRegistry, Ownable {
 
     /**
      * @notice Emitted when address for `key` contract is changed to `newValue`
@@ -56,6 +56,16 @@ contract Registry is IRegistry, Ownable {
      * @notice ESD reserve contract
      */
     address public reserve;
+
+    /**
+     * @notice ESD stabilizer contract
+     */
+    address public stabilizer;
+
+    /**
+     * @notice ESD oracle contract
+     */
+    address public oracle;
 
     /**
      * @notice ESD governor contract
@@ -122,6 +132,26 @@ contract Registry is IRegistry, Ownable {
     function setReserve(address newValue) external validate(newValue) onlyOwner {
         reserve = newValue;
         emit Registration("RESERVE", newValue);
+    }
+
+    /**
+ * @notice Registers a new address for the stabilizer
+ * @dev Owner only - governance hook
+ * @param newValue New address to register
+ */
+    function setStabilizer(address newValue) external validate(newValue) onlyOwner {
+        stabilizer = newValue;
+        emit Registration("STABILIZER", newValue);
+    }
+
+    /**
+     * @notice Registers a new address for the oracle
+     * @dev Owner only - governance hook
+     * @param newValue New address to register
+     */
+    function setOracle(address newValue) external validate(newValue) onlyOwner {
+        oracle = newValue;
+        emit Registration("ORACLE", newValue);
     }
 
     /**

@@ -17,16 +17,22 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../src/Interfaces.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
+import "../../../src/StabilizerInterfaces.sol";
 
-contract MockUSDC is IUSDC {
-    bool private _blacklisted;
+contract TestnetUSDC is ERC20Detailed, ERC20Burnable, IUSDC {
+    constructor()
+    ERC20Detailed("USD//C", "USDC", 6)
+    public
+    { }
 
-    function isBlacklisted(address _account) external view returns (bool) {
-        return _blacklisted;
+    function mint(address account, uint256 amount) external returns (bool) {
+        _mint(account, amount);
+        return true;
     }
 
-    function setIsBlacklisted(bool blacklisted) external {
-        _blacklisted = blacklisted;
+    function isBlacklisted(address account) external view returns (bool) {
+        return false;
     }
 }

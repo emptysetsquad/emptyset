@@ -4,7 +4,7 @@ const { BN, expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 
 const Dollar = contract.fromArtifact('Dollar');
-const Registry = contract.fromArtifact('Registry');
+const RegistryStabilizer = contract.fromArtifact('RegistryStabilizer');
 const MockStabilizerComptroller = contract.fromArtifact('MockStabilizerComptroller');
 const MockSettableOracle = contract.fromArtifact('MockSettableOracle');
 const MockSettableReserve = contract.fromArtifact('MockSettableReserve');
@@ -20,7 +20,7 @@ describe('StabilizerComptroller', function () {
   const [ ownerAddress, userAddress] = accounts;
 
   beforeEach(async function () {
-    this.registry = await Registry.new({from: ownerAddress});
+    this.registry = await RegistryStabilizer.new({from: ownerAddress});
     this.dollar = await Dollar.new({from: ownerAddress});
     this.comptroller = await MockStabilizerComptroller.new({from: ownerAddress});
     await this.comptroller.takeOwnership({from: ownerAddress});

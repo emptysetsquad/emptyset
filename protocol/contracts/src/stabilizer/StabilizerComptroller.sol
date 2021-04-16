@@ -21,11 +21,12 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import "../Interfaces.sol";
+import "../StabilizerInterfaces.sol";
 import "../lib/Decimal.sol";
 import "../lib/TimeUtils.sol";
 import "./StabilizerState.sol";
 import "./StabilizerToken.sol";
+import "../registry/stabilizer/RegistryStabilizer.sol";
 
 /**
  * @title StabilizerComptroller
@@ -114,7 +115,7 @@ contract StabilizerComptroller is StabilizerAccessors, StabilizerToken {
      *      Will revert if oracle has already been setup - enforces a single initialization
      */
     function _setup() internal {
-        IOracle oracle = IOracle(registry().oracle());
+        IOracle oracle = IOracle(RegistryStabilizer(address(registry())).oracle());
         address dollar = registry().dollar();
 
         require(!oracle.setupFor(dollar), "StabilizerImpl: already setup");
@@ -151,7 +152,7 @@ contract StabilizerComptroller is StabilizerAccessors, StabilizerToken {
 
         // Get current oracle snapshot
         (Decimal.D256 memory price, uint256 elapsed, bool healthy) =
-            IOracle(registry().oracle()).capture(registry().dollar());
+            IOracle(RegistryStabilizer(address(registry())).oracle()).capture(registry().dollar());
         Decimal.D256 memory elapsedDays = TimeUtils.secondsToDays(elapsed);
 
         // Borrow ESD per prior rate
