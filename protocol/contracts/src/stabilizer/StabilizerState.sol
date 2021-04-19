@@ -19,7 +19,6 @@ pragma experimental ABIEncoderV2;
 
 import "../lib/Decimal.sol";
 import "../Interfaces.sol";
-import "../common/IImplementation.sol";
 import "../common/Implementation.sol";
 
 /**
@@ -70,11 +69,6 @@ contract StabilizerTypes {
      * @notice Stores state for the entire stabilizer
      */
     struct State {
-        /**
-         * @notice Common state for upgradeable, ownable, implementation contracts
-         */
-        IImplementation.ImplementationState implementation;
-
         /**
          * @notice State for the sESD ERC20 implementation
          */
@@ -214,7 +208,7 @@ contract StabilizerAdmin is StabilizerState, Implementation {
  * @title StabilizerAccessors
  * @notice Reserve state accessor helpers
  */
-contract StabilizerAccessors is IImplementation, StabilizerAdmin {
+contract StabilizerAccessors is StabilizerAdmin {
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
 
@@ -313,58 +307,5 @@ contract StabilizerAccessors is IImplementation, StabilizerAdmin {
      */
     function _updateEma(Decimal.D256 memory newEma) internal {
         _state.oracle.ema = newEma;
-    }
-
-    // IMPLEMENTATION
-
-    /**
-     * @notice Registry containing mappings for all protocol contracts
-     * @return Protocol registry
-     */
-    function registry() public view returns (IRegistry) {
-        return IRegistry(_state.implementation.registry);
-    }
-
-    /**
-     * @notice Updates the registry contract
-     * @dev Internal only
-     * @param newRegistry New registry contract
-     */
-    function _setRegistry(address newRegistry) internal {
-        _state.implementation.registry = newRegistry;
-    }
-
-    /**
-     * @notice Owner contract with admin permission over this contract
-     * @return Owner contract
-     */
-    function owner() public view returns (address) {
-        return _state.implementation.owner;
-    }
-
-    /**
-     * @notice Updates the owner contract
-     * @dev Internal only
-     * @param newOwner New owner contract
-     */
-    function _setOwner(address newOwner) internal {
-        _state.implementation.owner = newOwner;
-    }
-
-    /**
-     * @notice The entered status of the current call
-     * @return entered status
-     */
-    function notEntered() internal view returns (bool) {
-        return _state.implementation.notEntered;
-    }
-
-    /**
-     * @notice Updates the entered status of the current call
-     * @dev Internal only
-     * @param newNotEntered New entered status
-     */
-    function _setNotEntered(bool newNotEntered) internal {
-        _state.implementation.notEntered = newNotEntered;
     }
 }
