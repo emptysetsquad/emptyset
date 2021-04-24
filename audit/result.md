@@ -18,7 +18,7 @@ Fixed in [#15](https://github.com/emptysetsquad/dollar-continuous/pull/15).
 
 #### [M02] High value transfers may revert
 
-NVA - mint function enforces correctness on total supply.
+Won't fix - don't want to modify widely-used forked code unnecessarily.
 
 #### [M03] Missing test coverage report
 
