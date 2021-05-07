@@ -207,15 +207,6 @@ contract Incentivizer is Ownable, ReentrancyGuard {
         );
     }
 
-    /**
-     * @notice Verifies that there is sufficient reward tokens for the current reward program
-     * @dev Internal only - helper
-     *      Reverts if there is insufficient reward token funds
-     */
-    function _verifyUnderlyingBalance() private view {
-        require(underlyingToken.balanceOf(address(this)) > totalUnderlying, "Incentivizer: insufficient underlying");
-    }
-
     // FLYWHEEL
 
     /**
