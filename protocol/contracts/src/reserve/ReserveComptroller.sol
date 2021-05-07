@@ -20,7 +20,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "../Interfaces.sol";
 import "../lib/Decimal.sol";
@@ -32,7 +31,7 @@ import "./ReserveVault.sol";
  * @title ReserveComptroller
  * @notice Reserve accounting logic for managing the ESD stablecoin.
  */
-contract ReserveComptroller is ReentrancyGuard, ReserveAccessors, ReserveVault {
+contract ReserveComptroller is ReserveAccessors, ReserveVault {
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
     using SafeERC20 for IERC20;

@@ -13,6 +13,7 @@ describe('StabilizerState', function () {
   beforeEach(async function () {
     this.accessors = await MockStabilizerState.new({from: ownerAddress});
     await this.accessors.takeOwnership({from: ownerAddress});
+    await this.accessors.setup({from: ownerAddress});
   });
 
   /**

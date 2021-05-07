@@ -45,6 +45,11 @@ describe('StabilizerComptroller', function () {
   });
 
   describe('before setup', function () {
+    it('initializes ema', async function () {
+      const ema = await this.comptroller.ema();
+      expect(ema.value).to.be.bignumber.equal(new BN(0));
+    });
+
     describe('when called', function () {
       beforeEach('call', async function () {
         await this.comptroller.setup({from: ownerAddress});

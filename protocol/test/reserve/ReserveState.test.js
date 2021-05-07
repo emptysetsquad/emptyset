@@ -13,6 +13,7 @@ describe('ReserveState', function () {
   beforeEach(async function () {
     this.accessors = await MockReserveState.new({from: ownerAddress});
     await this.accessors.takeOwnership({from: ownerAddress});
+    await this.accessors.setup({from: ownerAddress});
   });
 
   /**

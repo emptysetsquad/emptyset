@@ -22,6 +22,7 @@ import "../../src/common/Implementation.sol";
 contract MockImplementation is Implementation {
     address private _registry;
     address private _owner;
+    bool private _notEntered;
 
     function registry() public view returns (IRegistry) {
         return IRegistry(_registry);
@@ -39,5 +40,21 @@ contract MockImplementation is Implementation {
         _owner = newOwner;
     }
 
+    function notEnteredE() external view returns (bool) {
+        return notEntered();
+    }
+
+    function notEntered() internal view returns (bool) {
+        return _notEntered;
+    }
+
+    function _setNotEntered(bool newNotEntered) internal {
+        _notEntered = newNotEntered;
+    }
+
     function onlyOwnerE() external onlyOwner { }
+
+    function reenters() public nonReentrant {
+        reenters();
+    }
 }

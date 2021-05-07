@@ -28,6 +28,7 @@ describe('ReserveComptroller', function () {
     await this.cUsdc.setExchangeRate(ONE_USDC);
     this.comptroller = await MockReserveComptroller.new({from: ownerAddress}, {from: ownerAddress});
     await this.comptroller.takeOwnership({from: ownerAddress});
+    await this.comptroller.setup({from: ownerAddress});
     await this.comptroller.setRegistry(this.registry.address, {from: ownerAddress});
     await this.dollar.transferOwnership(this.comptroller.address, {from: ownerAddress});
     await this.registry.setUsdc(this.collateral.address, {from: ownerAddress});

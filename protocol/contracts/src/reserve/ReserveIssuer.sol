@@ -20,7 +20,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "../Interfaces.sol";
 import "./ReserveState.sol";
@@ -29,7 +28,7 @@ import "./ReserveState.sol";
  * @title ReserveIssuer
  * @notice Logic to manage the supply of ESDS
  */
-contract ReserveIssuer is ReentrancyGuard, ReserveAccessors {
+contract ReserveIssuer is ReserveAccessors {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     /**
@@ -49,7 +48,7 @@ contract ReserveIssuer is ReentrancyGuard, ReserveAccessors {
      * @param account Account to mint ESDS to
      * @param amount Amount of ESDS to mint
      */
-    function mintStake(address account, uint256 amount) public onlyOwner nonReentrant {
+    function mintStake(address account, uint256 amount) public onlyOwner {
         address stake = registry().stake();
 
         IManagedToken(stake).mint(amount);
@@ -63,7 +62,7 @@ contract ReserveIssuer is ReentrancyGuard, ReserveAccessors {
      * @dev Non-reentrant
      *      Owner only - governance hook
      */
-    function burnStake() public onlyOwner nonReentrant {
+    function burnStake() public onlyOwner {
         address stake = registry().stake();
 
         uint256 stakeBalance = IERC20(stake).balanceOf(address(this));
