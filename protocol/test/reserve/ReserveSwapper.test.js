@@ -12,16 +12,21 @@ const ONE_UNIT = ONE_BIP.mul(new BN(10000));
 const MAX_256 = new BN(2).pow(new BN(256)).sub(new BN(1));
 
 describe('ReserveSwapper', function () {
+  this.timeout(5000);
+
   const [ ownerAddress, userAddress ] = accounts;
 
   beforeEach(async function () {
     this.registry = await Registry.new({from: ownerAddress});
-    this.tokenA = await MockToken.new("Empty Set Dollar", "ESD", 18, {from: ownerAddress});
+    this.tokenA = await MockToken.new("Dai Stablecoin", "DAI", 18, {from: ownerAddress});
     this.tokenB = await MockToken.new("USD//C", "USDC", 6, {from: ownerAddress});
+    this.tokenESD = await MockToken.new("Empty Set Dollar", "ESD", 18, {from: ownerAddress});
     this.swapper = await MockReserveSwapper.new({from: ownerAddress});
     await this.swapper.takeOwnership({from: ownerAddress});
     await this.swapper.setup({from: ownerAddress});
     await this.swapper.setRegistry(this.registry.address, {from: ownerAddress});
+    await this.registry.setDollar(this.tokenESD.address, {from: ownerAddress});
+    await this.registry.setUsdc(this.tokenB.address, {from: ownerAddress});
   });
 
   describe('registerOrder', function () {
@@ -197,6 +202,36 @@ describe('ReserveSwapper', function () {
         const order = await this.swapper.order(this.tokenB.address, this.tokenA.address);
         expect(order.price.value).to.be.bignumber.equal(ONE_BIP.mul(new BN(11000)));
         expect(order.amount).to.be.bignumber.equal(MAX_256);
+      });
+    });
+
+    describe('makerToken is dollar', function () {
+      it('reverts', async function () {
+        await expectRevert(this.swapper.swap(
+          this.tokenESD.address,
+          this.tokenA.address,
+          ONE_UNIT.mul(new BN(600)),
+          {from: userAddress}), "ReserveSwapper: unsupported token");
+      });
+    });
+
+    describe('takerToken is dollar', function () {
+      it('reverts', async function () {
+        await expectRevert(this.swapper.swap(
+          this.tokenB.address,
+          this.tokenESD.address,
+          ONE_UNIT.mul(new BN(600)),
+          {from: userAddress}), "ReserveSwapper: unsupported token");
+      });
+    });
+
+    describe('makerToken and takerToken are equal', function () {
+      it('reverts', async function () {
+        await expectRevert(this.swapper.swap(
+          this.tokenB.address,
+          this.tokenB.address,
+          ONE_UNIT.mul(new BN(600)),
+          {from: userAddress}), "ReserveSwapper: tokens equal");
       });
     });
   });
