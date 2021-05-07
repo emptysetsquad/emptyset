@@ -153,13 +153,13 @@ contract Incentivizer is Ownable, ReentrancyGuard {
     function updateRewardProgram(uint256 rate, uint256 complete) external onlyOwner {
         require(complete > block.timestamp, "Incentivizer: already ended");
 
-        settle();
+        _settle();
 
         // Set new reward rate
         (rewardRate, rewardComplete, rewardUpdated) = (rate, complete, block.timestamp);
 
         // Return rewards in excess of the required amount
-        rewardToken.safeTransfer(reserve, verifyRewardBalance());
+        rewardToken.safeTransfer(reserve, _verifyRewardBalance());
 
         emit RewardProgramUpdate(rate, complete);
     }
@@ -178,7 +178,7 @@ contract Incentivizer is Ownable, ReentrancyGuard {
 
         IERC20(token).safeTransfer(reserve, amount);
 
-        verifyRewardBalance();
+        if (token == address(rewardToken)) _verifyRewardBalance();
 
         emit Rescue(token, amount);
     }
@@ -188,10 +188,24 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @dev Internal only - helper
      *      Reverts if there is insufficient reward token funds
      */
-    function verifyRewardBalance() private view returns (uint256) {
+    function _verifyRewardBalance() private view returns (uint256) {
         return _totalRewardBalance()
-            .sub(totalReward, "Incentivizer: insufficient rewards")
-            .sub(totalProvisionedReward(), "Incentivizer: insufficient rewards");
+        .sub(totalReward, "Incentivizer: insufficient rewards")
+        .sub(totalProvisionedReward(), "Incentivizer: insufficient rewards");
+    }
+
+    /**
+     * @notice Total reward token holdings of this contract
+     * @dev If reward token == underlying token, this will subtract the total underlying amount from the balance
+     * @dev Internal only - helper
+     */
+    function _totalRewardBalance() private view returns (uint256) {
+        if (underlyingToken == rewardToken) {
+            uint256 totalBalance = rewardToken.balanceOf(address(this));
+            return totalBalance > totalUnderlying ? totalBalance - totalUnderlying : 0;
+        }
+
+        return rewardToken.balanceOf(address(this));
     }
 
     // FLYWHEEL
@@ -237,7 +251,7 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @notice Accrues and updates rewards since last settlement
      * @dev Internal only
      */
-    function settle() internal {
+    function _settle() internal {
         uint256 nowOrComplete = nowOrComplete();
         Decimal.D256 memory newRewardPerUnit = rewardPerUnit();
         uint256 newReward = newRewardPerUnit.sub(_rewardPerUnit).mul(totalUnderlying).asUint256();
@@ -255,8 +269,8 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @dev Internal only
      * @param account Account to settle rewards for
      */
-    function settleAccount(address account) internal {
-        settle();
+    function _settleAccount(address account) internal {
+        _settle();
 
         _reward[account] = balanceOfReward(account);
         _paid[account] = _rewardPerUnit;
@@ -282,7 +296,7 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @param amount Amount of underlying tokens for the caller to deposit
      */
     function stake(uint256 amount) external nonReentrant {
-        settleAccount(msg.sender);
+        _settleAccount(msg.sender);
 
         // Increment account balance
         balanceOfUnderlying[msg.sender] = balanceOfUnderlying[msg.sender].add(amount);
@@ -300,7 +314,7 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @param amount Amount of underlying tokens for the caller to withdraw
      */
     function withdraw(uint256 amount) public nonReentrant {
-        settleAccount(msg.sender);
+        _settleAccount(msg.sender);
 
         // Decrement account balance
         balanceOfUnderlying[msg.sender] = balanceOfUnderlying[msg.sender].sub(amount, "Incentivizer: insufficient balance");
@@ -317,7 +331,7 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @dev Non-reentrant
      */
     function claim() public nonReentrant {
-        settleAccount(msg.sender);
+        _settleAccount(msg.sender);
 
         uint256 rewardBalance = _reward[msg.sender];
         rewardToken.safeTransfer(msg.sender, rewardBalance);
@@ -334,21 +348,5 @@ contract Incentivizer is Ownable, ReentrancyGuard {
     function exit() external {
         withdraw(balanceOfUnderlying[msg.sender]);
         claim();
-    }
-
-    // INTERNAL
-
-    /**
-     * @notice Total reward token holdings of this contract
-     * @dev If reward token == underlying token, this will subtract the total underlying amount from the balance
-     * @dev Internal only - helper
-     */
-    function _totalRewardBalance() private view returns (uint256) {
-        if (underlyingToken == rewardToken) {
-            uint256 totalBalance = rewardToken.balanceOf(address(this));
-            return totalBalance > totalUnderlying ? totalBalance - totalUnderlying : 0;
-        }
-
-        return rewardToken.balanceOf(address(this));
     }
 }
