@@ -93,6 +93,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @notice The price that one ESD can currently be sold to the reserve for
      * @dev Returned as a Decimal.D256
      *      Normalizes for decimals (e.g. 1.00 USDC == Decimal.one())
+     *      Equivalent to the current reserve ratio less the current redemption tax (if any)
      * @return Current ESD redemption price
      */
     function redeemPrice() public view returns (Decimal.D256 memory) {
@@ -103,6 +104,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @notice Mints `amount` ESD to the caller in exchange for an equivalent amount of USDC
      * @dev Non-reentrant
      *      Normalizes for decimals
+     *      Caller must approve reserve to transfer USDC
      * @param amount Amount of ESD to mint
      */
     function mint(uint256 amount) external nonReentrant {
@@ -122,6 +124,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @notice Burns `amount` ESD from the caller in exchange for USDC at the rate of {redeemPrice}
      * @dev Non-reentrant
      *      Normalizes for decimals
+     *      Caller must approve reserve to transfer ESD
      * @param amount Amount of ESD to mint
      */
     function redeem(uint256 amount) external nonReentrant {

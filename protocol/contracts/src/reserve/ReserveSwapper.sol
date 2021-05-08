@@ -27,7 +27,11 @@ import "./ReserveState.sol";
 
 /**
  * @title ReserveSwapper
- * @notice Logic for managing outstanding limit orders, allow the reserve to swap its held tokens
+ * @notice Logic for managing outstanding reserve limit orders.
+ *         Since the reserve is autonomous, it cannot use traditional DEXs without being front-run. The `ReserveSwapper`
+ *         allows governance to place outstanding limit orders selling reserve assets in exchange for assets the reserve
+ *         wishes to purchase. This is the main mechanism by which the reserve may diversify itself, or buy back ESDS
+ *         using generated rewards.
  */
 contract ReserveSwapper is ReserveComptroller {
     using SafeMath for uint256;
@@ -47,11 +51,10 @@ contract ReserveSwapper is ReserveComptroller {
     /**
      * @notice Sets the `price` and `amount` of the specified `makerToken`-`takerToken` order
      * @dev Owner only - governance hook
-     *      uint256(-1) indicates an unlimited order amount
      * @param makerToken Token that the reserve wishes to sell
      * @param takerToken Token that the reserve wishes to buy
      * @param price Price as a ratio of takerAmount:makerAmount times 10^18
-     * @param amount Amount to decrement in ESD
+     * @param amount Amount of the makerToken that reserve wishes to sell - uint256(-1) indicates all reserve funds
      */
     function registerOrder(address makerToken, address takerToken, uint256 price, uint256 amount) external onlyOwner {
         _updateOrder(makerToken, takerToken, price, amount);
@@ -65,7 +68,6 @@ contract ReserveSwapper is ReserveComptroller {
      *      Uses the state-defined price for the `makerToken`-`takerToken` order
      *      Maker and taker tokens must be different
      *      Cannot swap ESD
-     *      uint256(-1) indicates an unlimited order amount
      * @param makerToken Token that the caller wishes to buy
      * @param takerToken Token that the caller wishes to sell
      * @param takerAmount Amount of takerToken to sell

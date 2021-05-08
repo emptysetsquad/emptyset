@@ -45,6 +45,8 @@ contract ReserveIssuer is ReserveAccessors {
      * @notice Mints new ESDS tokens to a specified `account`
      * @dev Non-reentrant
      *      Owner only - governance hook
+     *      ESDS maxes out at ~79b total supply (2^96/10^18) due to its 96-bit limitation
+     *      Will revert if totalSupply exceeds this maximum
      * @param account Account to mint ESDS to
      * @param amount Amount of ESDS to mint
      */
