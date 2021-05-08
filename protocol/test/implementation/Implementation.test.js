@@ -5,21 +5,25 @@ const { expect } = require('chai');
 
 const MockImplementation = contract.fromArtifact('MockImplementation');
 const Registry = contract.fromArtifact('Registry');
+const Timelock = contract.fromArtifact('Timelock');
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 describe('Implementation', function () {
-  const [ ownerAddress, userAddress, newOwnerAddress, timelockA, timelockB] = accounts;
+  const [ ownerAddress, userAddress] = accounts;
 
   beforeEach(async function () {
+    this.timelockA = await Timelock.new(ownerAddress, 86400 * 2, {from: ownerAddress});
+    this.timelockB = await Timelock.new(ownerAddress, 86400 * 2, {from: ownerAddress});
+    this.newOwner = await Timelock.new(ownerAddress, 86400 * 2, {from: ownerAddress});
     this.implementation = await MockImplementation.new({from: ownerAddress});
     this.implementation.takeOwnership({from: ownerAddress});
     this.registryA = await Registry.new({from: ownerAddress});
-    await this.registryA.setTimelock(timelockA, {from: ownerAddress});
+    await this.registryA.setTimelock(this.timelockA.address, {from: ownerAddress});
     this.registryB = await Registry.new({from: ownerAddress});
-    await this.registryB.setTimelock(timelockA, {from: ownerAddress});
+    await this.registryB.setTimelock(this.timelockA.address, {from: ownerAddress});
     this.registryC = await Registry.new({from: ownerAddress});
-    await this.registryC.setTimelock(timelockB, {from: ownerAddress});
+    await this.registryC.setTimelock(this.timelockB.address, {from: ownerAddress});
   });
 
   describe('setRegistry', function () {
@@ -137,17 +141,17 @@ describe('Implementation', function () {
 
       describe('when called', function () {
         beforeEach('call', async function () {
-          this.result = await this.implementation.setOwner(newOwnerAddress, {from: ownerAddress});
+          this.result = await this.implementation.setOwner(this.newOwner.address, {from: ownerAddress});
           this.txHash = this.result.tx
         });
 
         it('sets new value', async function () {
-          expect(await this.implementation.owner()).to.be.equal(newOwnerAddress);
+          expect(await this.implementation.owner()).to.be.equal(this.newOwner.address);
         });
 
         it('emits OwnerUpdate event', async function () {
           const event = await expectEvent.inTransaction(this.txHash, MockImplementation, 'OwnerUpdate', {
-            newOwner: newOwnerAddress,
+            newOwner: this.newOwner.address,
           });
         });
       });
@@ -165,7 +169,7 @@ describe('Implementation', function () {
       it('reverts', async function () {
         await expectRevert(
           this.implementation.setOwner(ZERO_ADDRESS, {from: ownerAddress}),
-          "Implementation: zero address");
+          "Implementation: not contract");
       });
     });
   });

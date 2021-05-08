@@ -17,6 +17,7 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "../Interfaces.sol";
 
@@ -45,7 +46,8 @@ contract RegistryAccessor is Ownable {
     function setRegistry(address newRegistry) public onlyOwner {
         require(newRegistry != address(0), "RegistryAccessor: zero address");
         require(
-            address(registry) == address(0) || IRegistry(newRegistry).timelock() == registry.timelock(),
+            (address(registry) == address(0) && Address.isContract(newRegistry)) ||
+                IRegistry(newRegistry).timelock() == registry.timelock(),
             "RegistryAccessor: timelocks must match"
         );
 

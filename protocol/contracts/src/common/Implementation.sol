@@ -17,6 +17,7 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../Interfaces.sol";
 import "./IImplementation.sol";
 
@@ -75,7 +76,8 @@ contract Implementation is IImplementation {
 
         require(newRegistry != address(0), "Implementation: zero address");
         require(
-            address(registry) == address(0) || IRegistry(newRegistry).timelock() == registry.timelock(),
+            (address(registry) == address(0) && Address.isContract(newRegistry)) ||
+                IRegistry(newRegistry).timelock() == registry.timelock(),
             "Implementation: timelocks must match"
         );
 
@@ -105,7 +107,8 @@ contract Implementation is IImplementation {
      * @param newOwner New owner contract
      */
     function setOwner(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "Implementation: zero address");
+        require(newOwner != address(this), "Implementation: this");
+        require(Address.isContract(newOwner), "Implementation: not contract");
 
         _setOwner(newOwner);
 
