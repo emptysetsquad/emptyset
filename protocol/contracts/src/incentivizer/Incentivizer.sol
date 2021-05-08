@@ -17,12 +17,13 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "../registry/RegistryAccessor.sol";
 import "../lib/Decimal.sol";
+import "../Interfaces.sol";
 
 /**
  * @title Incentivizer
@@ -32,7 +33,7 @@ import "../lib/Decimal.sol";
  *      is sufficient balance. Architecture based off the Synthetix StakingRewards contract:
  *      https://github.com/Synthetixio/synthetix/blob/master/contracts/StakingRewards.sol
  */
-contract Incentivizer is Ownable, ReentrancyGuard {
+contract Incentivizer is RegistryAccessor, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Decimal for Decimal.D256;
@@ -67,11 +68,6 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @notice Emitted on when `account` claims `amount` of the reward token
      */
     event Claim(address account, uint256 amount);
-
-    /**
-     * @notice Address to receive rescued and refunded funds
-     */
-    address public reserve;
 
     /**
      * @notice ERC20 token that will be used as underlying for staking
@@ -133,12 +129,12 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @notice Constructs the Incentivizer
      * @param underlying_ Underlying ERC20 token for staking
      * @param reward_ Reward ERC20 token for rewards
-     * @notice reserve_ Address to receive rescued and refunded ERC20 tokens
+     * @notice registry_ Address of the Continuous ESDS contract registry
      */
-    constructor(IERC20 underlying_, IERC20 reward_, address reserve_) public {
-        reserve = reserve_;
+    constructor(IERC20 underlying_, IERC20 reward_, address registry_) public {
         underlyingToken = underlying_;
         rewardToken = reward_;
+        setRegistry(registry_);
     }
 
     // ADMIN
@@ -146,7 +142,7 @@ contract Incentivizer is Ownable, ReentrancyGuard {
     /**
      * @notice Updates the rate and completion time for this contract's reward program
      * @dev Owner only - governance hook
-     *      Insufficient funds will revert - excess funds will be refunded to {reserve}
+     *      Insufficient funds will revert - excess funds will be refunded to the reserve
      * @param rate Reward token amount to disperse to enter staking pool per second
      * @param complete Timestamp the reward program ends
      */
@@ -160,13 +156,13 @@ contract Incentivizer is Ownable, ReentrancyGuard {
 
         // Return rewards in excess of the required amount
         (, uint256 excessRewards) = _verifyBalance();
-        rewardToken.safeTransfer(reserve, excessRewards);
+        rewardToken.safeTransfer(registry.reserve(), excessRewards);
 
         emit RewardProgramUpdate(rate, complete);
     }
 
     /**
-     * @notice Allows the owner to withdraw stuck ERC20 tokens to {reserve}
+     * @notice Allows the owner to withdraw stuck ERC20 tokens to the reserve
      * @dev Owner only - governance hook
      *      Non-reentrant
      *      Cannot withdraw the underlying token
@@ -175,7 +171,7 @@ contract Incentivizer is Ownable, ReentrancyGuard {
      * @param amount Amount to withdraw
      */
     function rescue(address token, uint256 amount) external nonReentrant onlyOwner {
-        IERC20(token).safeTransfer(reserve, amount);
+        IERC20(token).safeTransfer(registry.reserve(), amount);
 
         if (token == address(rewardToken) || token == address(underlyingToken)) {
             _verifyBalance();

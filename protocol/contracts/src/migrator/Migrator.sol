@@ -16,9 +16,9 @@
 
 pragma solidity 0.5.17;
 
-import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/lifecycle/Pausable.sol";
+import "../registry/RegistryAccessor.sol";
 import "../lib/Decimal.sol";
 import "../Interfaces.sol";
 
@@ -41,7 +41,7 @@ import "../Interfaces.sol";
  *     paused, epoch advancement turned off, and governance frozen). In the event that this is not possible,
  *     this contract may be topped up via governance after initialization if there is insufficient available ESDS.
  */
-contract Migrator is Ownable, Pausable {
+contract Migrator is RegistryAccessor, Pausable {
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
     using SafeERC20 for IERC20;
@@ -78,29 +78,17 @@ contract Migrator is Ownable, Pausable {
     address public dollar;
 
     /**
-     * @notice Address of the Continuous ESDS governance token
-     */
-    address public stake;
-
-    /**
-     * @notice Address of the Continuous ESD protocol reserve
-     */
-    address public reserve;
-
-    /**
      * @notice Construct the Migrator contract
      * @param ratio_ Ratio of ESDS granted for ESD burned
      * @param dao_ Address of the v1 ESD DAO
      * @param dollar_ Address of the v1 ESD stablecoin
-     * @param stake_ Address of the Continuous ESDS governance token
-     * @param reserve_ Address of the Continuous ESD protocol reserve
+     * @param registry_ Address of the Continuous ESDS contract registry
      */
-    constructor(uint256 ratio_, IDAO dao_, address dollar_, address stake_, address reserve_) public {
+    constructor(uint256 ratio_, IDAO dao_, address dollar_, address registry_) public {
         ratio = Decimal.D256({value: ratio_});
         dao = dao_;
         dollar = dollar_;
-        stake = stake_;
-        reserve = reserve_;
+        setRegistry(registry_);
 
         pause();
     }
@@ -138,12 +126,12 @@ contract Migrator is Ownable, Pausable {
     }
 
     /**
-     * @notice Allows the owner to withdraw `amount` ESDS to the {reserve}
+     * @notice Allows the owner to withdraw `amount` ESDS to the reserve
      * @dev Owner only - governance hook
      *      Verifies that this contract is sufficiently funded - reverts if not
      */
     function withdraw(uint256 amount) external onlyOwner {
-        IERC20(stake).safeTransfer(reserve, amount);
+        IERC20(registry.stake()).safeTransfer(registry.reserve(), amount);
         _verifyBalance();
 
         emit Withdrawal(amount);
@@ -156,7 +144,7 @@ contract Migrator is Ownable, Pausable {
      *      Verifies that this contract is sufficiently funded - reverts if not
      */
     function _verifyBalance() private view {
-        require(IERC20(stake).balanceOf(address(this)) >= outstandingStake(), "Migrator: insufficient funds");
+        require(IERC20(registry.stake()).balanceOf(address(this)) >= outstandingStake(), "Migrator: insufficient funds");
     }
 
     // MIGRATE
@@ -183,7 +171,7 @@ contract Migrator is Ownable, Pausable {
     function _migrateDollar(address account, uint256 dollarAmount) private {
         IERC20(dollar).safeTransferFrom(account, address(this), dollarAmount);
         IManagedToken(dollar).burn(dollarAmount);
-        IERC20(stake).safeTransfer(account, ratio.mul(dollarAmount).asUint256());
+        IERC20(registry.stake()).safeTransfer(account, ratio.mul(dollarAmount).asUint256());
     }
 
     /**
@@ -194,7 +182,7 @@ contract Migrator is Ownable, Pausable {
      */
     function _migrateStake(address account, uint256 stakeAmount) private {
         dao.burn(account, stakeAmount);
-        IERC20(stake).safeTransfer(account, stakeAmount);
+        IERC20(registry.stake()).safeTransfer(account, stakeAmount);
     }
 }
 

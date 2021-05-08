@@ -7,6 +7,8 @@ const MockV1Dollar = contract.fromArtifact('MockV1Dollar');
 const Stake = contract.fromArtifact('Stake');
 const MockV1DAO = contract.fromArtifact('MockV1DAO');
 const Migrator = contract.fromArtifact('Migrator');
+const Registry = contract.fromArtifact('Registry');
+const MockContract = contract.fromArtifact('MockContract');
 
 const ONE_BIP = new BN(10).pow(new BN(14));
 const ONE_UNIT = ONE_BIP.mul(new BN(10000));
@@ -14,14 +16,18 @@ const ONE_UNIT = ONE_BIP.mul(new BN(10000));
 describe('Migrator', function () {
   this.timeout(5000);
 
-  const [ ownerAddress, userAddress1, userAddress2, userAddress3, reserveAddress ] = accounts;
+  const [ ownerAddress, userAddress1, userAddress2, userAddress3 ] = accounts;
 
   beforeEach(async function () {
     this.ratio = new BN(10).pow(new BN(19)) // 10:1 ESDS:ESD
     this.dollar = await MockV1Dollar.new({from: ownerAddress});
     this.stake = await Stake.new({from: ownerAddress});
     this.dao = await MockV1DAO.new({from: ownerAddress});
-    this.migrator = await Migrator.new(this.ratio, this.dao.address, this.dollar.address, this.stake.address, reserveAddress, {from: ownerAddress});
+    this.registry = await Registry.new({from: ownerAddress});
+    this.reserve = await MockContract.new({from: ownerAddress});
+    this.migrator = await Migrator.new(this.ratio, this.dao.address, this.dollar.address, this.registry.address, {from: ownerAddress});
+    await this.registry.setStake(this.stake.address, {from: ownerAddress});
+    await this.registry.setReserve(this.reserve.address, {from: ownerAddress});
   });
 
   describe('initialize', function () {
@@ -132,7 +138,7 @@ describe('Migrator', function () {
 
         it('transfers', async function () {
           expect(await this.stake.balanceOf(this.migrator.address)).to.be.bignumber.equal(ONE_UNIT.muln(5000000));
-          expect(await this.stake.balanceOf(reserveAddress)).to.be.bignumber.equal(ONE_UNIT.muln(1000));
+          expect(await this.stake.balanceOf(this.reserve.address)).to.be.bignumber.equal(ONE_UNIT.muln(1000));
         });
 
         it('emits Withdrawal event', async function () {
