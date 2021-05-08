@@ -115,9 +115,9 @@ contract Incentivizer is RegistryAccessor, ReentrancyGuard {
     mapping(address => uint256) internal _reward;
 
     /**
-     * @notice Mapping of rewards already paid out per account
+     * @notice Mapping of last settled rewardPerUnit per account
      */
-    mapping(address => Decimal.D256) internal _paid;
+    mapping(address => Decimal.D256) internal _settled;
 
     /**
      * @notice Monotonically increasing accumulator to track the reward amount per unit of staked underlying
@@ -268,7 +268,7 @@ contract Incentivizer is RegistryAccessor, ReentrancyGuard {
         _settle();
 
         _reward[account] = balanceOfReward(account);
-        _paid[account] = _rewardPerUnit;
+        _settled[account] = _rewardPerUnit;
     }
 
     // EXTERNAL
@@ -279,7 +279,7 @@ contract Incentivizer is RegistryAccessor, ReentrancyGuard {
      */
     function balanceOfReward(address account) public view returns (uint256) {
         return _reward[account].add(
-            rewardPerUnit().sub(_paid[account])      // Since last checkpoint
+            rewardPerUnit().sub(_settled[account])   // Since last checkpoint
                 .mul(balanceOfUnderlying[account])   // Multiply per unit
                 .asUint256()                         // Convert and truncate
         );
