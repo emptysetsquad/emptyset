@@ -75,10 +75,6 @@ contract ReserveTypes {
      * @notice Stores state for the entire reserve
      */
     struct State {
-        /**
-         * @notice Common state for upgradeable, ownable, implementation contracts
-         */
-        IImplementation.ImplementationState implementation;
 
         /**
          * @notice Current redemption tax for artificially lowering the {redeemPrice}
@@ -154,7 +150,7 @@ contract ReserveAdmin is Implementation, ReserveState {
  * @title ReserveAccessors
  * @notice Reserve state accessor helpers
  */
-contract ReserveAccessors is IImplementation, ReserveAdmin {
+contract ReserveAccessors is ReserveAdmin {
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
 
@@ -243,59 +239,5 @@ contract ReserveAccessors is IImplementation, ReserveAdmin {
      */
     function _decrementOrderAmount(address makerToken, address takerToken, uint256 amount, string memory reason) internal {
         _state.orders[makerToken][takerToken].amount = _state.orders[makerToken][takerToken].amount.sub(amount, reason);
-    }
-
-    // IMPLEMENTATION
-
-    /**
-     * @notice Registry containing mappings for all protocol contracts
-     * @return Protocol registry
-     */
-    function registry() public view returns (IRegistry) {
-        return IRegistry(_state.implementation.registry);
-    }
-
-    /**
-     * @notice Updates the registry contract
-     * @dev Internal only
-     * @param newRegistry New registry contract
-     */
-    function _setRegistry(address newRegistry) internal {
-        _state.implementation.registry = newRegistry;
-    }
-
-    /**
-     * @notice Owner contract with admin permission over this contract
-     * @return Owner contract
-     */
-    function owner() public view returns (address) {
-        return _state.implementation.owner;
-    }
-
-    /**
-     * @notice Updates the owner contract
-     * @dev Internal only
-     * @param newOwner New owner contract
-     */
-    function _setOwner(address newOwner) internal {
-        _state.implementation.owner = newOwner;
-    }
-
-
-    /**
-     * @notice The entered status of the current call
-     * @return entered status
-     */
-    function notEntered() internal view returns (bool) {
-        return _state.implementation.notEntered;
-    }
-
-    /**
-     * @notice Updates the entered status of the current call
-     * @dev Internal only
-     * @param newNotEntered New entered status
-     */
-    function _setNotEntered(bool newNotEntered) internal {
-        _state.implementation.notEntered = newNotEntered;
     }
 }

@@ -19,13 +19,22 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "../Interfaces.sol";
-import "./IImplementation.sol";
 
 /**
  * @title Implementation
  * @notice Common functions and accessors across upgradeable, ownable contracts
  */
-contract Implementation is IImplementation {
+contract Implementation {
+
+    /**
+     * @notice Emitted when {owner} is updated with `newOwner`
+     */
+    event OwnerUpdate(address newOwner);
+
+    /**
+     * @notice Emitted when {registry} is updated with `newRegistry`
+     */
+    event RegistryUpdate(address newRegistry);
 
     /**
      * @dev Storage slot with the address of the current implementation
@@ -37,7 +46,22 @@ contract Implementation is IImplementation {
      * @dev Storage slot with the admin of the contract
      * This is the keccak-256 hash of "eip1967.proxy.admin" subtracted by 1
      */
-    bytes32 internal constant ADMIN_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+    bytes32 private constant ADMIN_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+
+    /**
+     * @notice Storage slot with the owner of the contract
+     */
+    bytes32 private constant OWNER_SLOT = keccak256("emptysetdollar.v2.implementation.owner");
+
+    /**
+     * @notice Storage slot with the owner of the contract
+     */
+    bytes32 private constant REGISTRY_SLOT = keccak256("emptysetdollar.v2.implementation.registry");
+
+    /**
+     * @notice Storage slot with the owner of the contract
+     */
+    bytes32 private constant NOT_ENTERED_SLOT = keccak256("emptysetdollar.v2.implementation.notEntered");
 
     // UPGRADEABILITY
 
@@ -74,6 +98,7 @@ contract Implementation is IImplementation {
     function setRegistry(address newRegistry) external onlyOwner {
         IRegistry registry = registry();
 
+        // New registry must have identical owner
         require(newRegistry != address(0), "Implementation: zero address");
         require(
             (address(registry) == address(0) && Address.isContract(newRegistry)) ||
@@ -84,6 +109,29 @@ contract Implementation is IImplementation {
         _setRegistry(newRegistry);
 
         emit RegistryUpdate(newRegistry);
+    }
+
+    /**
+     * @notice Updates the registry contract
+     * @dev Internal only
+     * @param newRegistry New registry contract
+     */
+    function _setRegistry(address newRegistry) internal {
+        bytes32 position = REGISTRY_SLOT;
+        assembly {
+            sstore(position, newRegistry)
+        }
+    }
+
+    /**
+     * @notice Returns the current registry contract
+     * @return Address of the current registry contract
+     */
+    function registry() public view returns (IRegistry reg) {
+        bytes32 slot = REGISTRY_SLOT;
+        assembly {
+            reg := sload(slot)
+        }
     }
 
     // OWNER
@@ -116,6 +164,29 @@ contract Implementation is IImplementation {
     }
 
     /**
+     * @notice Updates the owner contract
+     * @dev Internal only
+     * @param newOwner New owner contract
+     */
+    function _setOwner(address newOwner) internal {
+        bytes32 position = OWNER_SLOT;
+        assembly {
+            sstore(position, newOwner)
+        }
+    }
+
+    /**
+     * @notice Owner contract with admin permission over this contract
+     * @return Owner contract
+     */
+    function owner() public view returns (address o) {
+        bytes32 slot = OWNER_SLOT;
+        assembly {
+            o := sload(slot)
+        }
+    }
+
+    /**
      * @dev Only allow when the caller is the owner address
      */
     modifier onlyOwner {
@@ -145,6 +216,29 @@ contract Implementation is IImplementation {
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
         _setNotEntered(true);
+    }
+
+    /**
+     * @notice The entered status of the current call
+     * @return entered status
+     */
+    function notEntered() internal view returns (bool ne) {
+        bytes32 slot = NOT_ENTERED_SLOT;
+        assembly {
+            ne := sload(slot)
+        }
+    }
+
+    /**
+     * @notice Updates the entered status of the current call
+     * @dev Internal only
+     * @param newNotEntered New entered status
+     */
+    function _setNotEntered(bool newNotEntered) internal {
+        bytes32 position = NOT_ENTERED_SLOT;
+        assembly {
+            sstore(position, newNotEntered)
+        }
     }
 
     // SETUP
