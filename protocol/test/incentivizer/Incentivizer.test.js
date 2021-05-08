@@ -342,6 +342,14 @@ describe('Incentivizer', function () {
         await this.underlying.approve(this.incentivizer.address, ONE_UNIT.muln(1000), {from: userAddress});
       });
 
+      describe('zero amount', function () {
+        it('reverts', async function () {
+          await expectRevert(
+            this.incentivizer.stake(new BN(0), {from: userAddress}),
+            "Incentivizer: zero amount");
+        });
+      });
+
       describe('simple', function () {
         beforeEach(async function () {
           this.result = await this.incentivizer.stake(ONE_UNIT.muln(1000), {from: userAddress});
@@ -489,6 +497,18 @@ describe('Incentivizer', function () {
       beforeEach(async function () {
         await this.underlying.mint(userAddress, ONE_UNIT.muln(1000));
         await this.underlying.approve(this.incentivizer.address, ONE_UNIT.muln(1000), {from: userAddress});
+      });
+
+      describe('zero amount', function () {
+        beforeEach(async function () {
+          await this.incentivizer.stake(ONE_UNIT.muln(1000), {from: userAddress});
+        });
+
+        it('reverts', async function () {
+          await expectRevert(
+            this.incentivizer.withdraw(new BN(0), {from: userAddress}),
+            "Incentivizer: zero amount");
+        });
       });
 
       describe('simple', function () {
@@ -1038,6 +1058,14 @@ describe('Incentivizer', function () {
         await this.underlying.approve(this.incentivizer.address, ONE_UNIT.muln(1000), {from: userAddress});
       });
 
+      describe('zero amount', function () {
+        it('reverts', async function () {
+          await expectRevert(
+            this.incentivizer.stake(new BN(0), {from: userAddress}),
+            "Incentivizer: zero amount");
+        });
+      });
+
       describe('simple', function () {
         beforeEach(async function () {
           this.result = await this.incentivizer.stake(ONE_UNIT.muln(1000), {from: userAddress});
@@ -1181,6 +1209,18 @@ describe('Incentivizer', function () {
       beforeEach(async function () {
         await this.underlying.mint(userAddress, ONE_UNIT.muln(1000));
         await this.underlying.approve(this.incentivizer.address, ONE_UNIT.muln(1000), {from: userAddress});
+      });
+
+      describe('zero amount', function () {
+        beforeEach(async function () {
+          await this.incentivizer.stake(ONE_UNIT.muln(1000), {from: userAddress});
+        });
+
+        it('reverts', async function () {
+          await expectRevert(
+            this.incentivizer.withdraw(new BN(0), {from: userAddress}),
+            "Incentivizer: zero amount");
+        });
       });
 
       describe('simple', function () {

@@ -291,6 +291,8 @@ contract Incentivizer is RegistryAccessor, ReentrancyGuard {
      * @param amount Amount of underlying tokens for the caller to deposit
      */
     function stake(uint256 amount) external nonReentrant {
+        require(amount != 0, "Incentivizer: zero amount");
+
         _settleAccount(msg.sender);
 
         // Increment account balance
@@ -309,6 +311,8 @@ contract Incentivizer is RegistryAccessor, ReentrancyGuard {
      * @param amount Amount of underlying tokens for the caller to withdraw
      */
     function withdraw(uint256 amount) public nonReentrant {
+        require(amount != 0, "Incentivizer: zero amount");
+
         _settleAccount(msg.sender);
 
         // Decrement account balance
