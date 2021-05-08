@@ -21,7 +21,6 @@ import "../lib/Decimal.sol";
 import "../Interfaces.sol";
 import "../common/IImplementation.sol";
 import "../common/Implementation.sol";
-import "../common/Implementation.sol";
 
 /**
  * @title StabilizerTypes
