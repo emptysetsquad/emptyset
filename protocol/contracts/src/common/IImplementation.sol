@@ -48,12 +48,12 @@ contract IImplementation {
     /**
      * @notice Emitted when {owner} is updated with `newOwner`
      */
-    event OwnerUpdate(address newOwner);
+    event OwnerUpdate(address indexed newOwner);
 
     /**
      * @notice Emitted when {registry} is updated with `newRegistry`
      */
-    event RegistryUpdate(address newRegistry);
+    event RegistryUpdate(address indexed newRegistry);
 
     // REGISTRY
 
