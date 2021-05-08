@@ -41,10 +41,37 @@ describe('Incentivizer', function () {
     });
 
     describe('underlying', function () {
+      beforeEach(async function () {
+        await this.underlying.mint(userAddress, ONE_UNIT.muln(1000));
+        await this.underlying.approve(this.incentivizer.address, ONE_UNIT.muln(1000), {from: userAddress});
+        await this.incentivizer.stake(ONE_UNIT.muln(1000), {from: userAddress});
+      });
+
       it('reverts', async function () {
         await expectRevert(
           this.incentivizer.rescue(this.underlying.address, ONE_UNIT.muln(1000), {from: ownerAddress}),
-          "Incentivizer: underlying");
+          "Incentivizer: insufficient underlying");
+      });
+
+      describe('excess', function () {
+        beforeEach(async function () {
+          await this.underlying.mint(this.incentivizer.address, ONE_UNIT.muln(100));
+          this.result = await this.incentivizer.rescue(this.underlying.address, ONE_UNIT.muln(100), {from: ownerAddress})
+          this.txHash = this.result.tx;
+        });
+
+        it('transfers', async function () {
+          expect(await this.underlying.balanceOf(this.incentivizer.address)).to.be.bignumber.equal(ONE_UNIT.muln(1000));
+          expect(await this.underlying.balanceOf(reserveAddress)).to.be.bignumber.equal(ONE_UNIT.muln(100));
+        });
+
+        it('emits Rescue event', async function () {
+          const event = await expectEvent.inTransaction(this.txHash, Incentivizer, 'Rescue', {
+            token: this.underlying.address
+          });
+
+          expect(event.args.amount).to.be.bignumber.equal(ONE_UNIT.mul(new BN(100)));
+        });
       });
     });
 
