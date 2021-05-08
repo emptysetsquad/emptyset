@@ -7,6 +7,7 @@ const Dollar = contract.fromArtifact('Dollar');
 const MockOracle = contract.fromArtifact('MockOracle');
 const MockUniswapV2PairTrade = contract.fromArtifact('MockUniswapV2PairTrade');
 const MockUSDC = contract.fromArtifact('MockUSDC');
+const MockToken = contract.fromArtifact('MockToken');
 
 const DECIMAL_DIFF = new BN(10).pow(new BN(12));
 const EPSILON = new BN(1).mul(DECIMAL_DIFF);
@@ -20,6 +21,10 @@ function uint112s(time, priceNum=1, priceDen=1) {
   return new BN(priceNum).mul(new BN(2).pow(new BN(112))).divn(priceDen).div(DECIMAL_DIFF).muln(time)
 }
 
+function uint112sSmall(time, priceNum=1, priceDen=1) {
+  return new BN(priceNum).mul(new BN(2).pow(new BN(112))).muln(1000).muln(time).divn(priceDen)
+}
+
 async function priceForToBN(oracle) {
   return (await oracle.latestPrice()).value;
 }
@@ -27,6 +32,12 @@ async function priceForToBN(oracle) {
 async function simulateTrade(amm, esd, usdc) {
   return await amm.simulateTrade(
     new BN(esd).mul(new BN(10).pow(new BN(18))),
+    new BN(usdc).mul(new BN(10).pow(new BN(6))));
+}
+
+async function simulateTradeSmall(amm, small, usdc) {
+  return await amm.simulateTrade(
+    new BN(small).mul(new BN(10).pow(new BN(3))),
     new BN(usdc).mul(new BN(10).pow(new BN(6))));
 }
 
@@ -608,6 +619,33 @@ describe('Oracle', function () {
   describe('pairFor', function () {
     it('is returns pair', async function () {
       expect(await this.oracle.pairFor(this.dollar.address)).to.be.equal(this.amm.address);
+    });
+  });
+
+  describe('token with decimals less than 6', function () {
+    beforeEach(async function () {
+      this.small = await MockToken.new("Small Token", "ST", 3, {from: ownerAddress});
+      this.amm = await MockUniswapV2PairTrade.new({from: ownerAddress});
+      this.oracle = await MockOracle.new(this.amm.address, this.usdc.address, this.small.address, {from: ownerAddress});
+
+      await simulateTradeSmall(this.amm, 1000000, 1100000);
+      this.initialized = await time.latest();
+      await time.increase(3600);
+      await simulateTradeSmall(this.amm, 1000000, 1100000);
+      await this.oracle.capture(this.small.address, {from: ownerAddress});
+      await time.increase(86400);
+      await this.oracle.capture(this.small.address, {from: ownerAddress});
+      this.timestamp = await time.latest();
+      this.timediff = this.timestamp.sub(this.initialized).toNumber();
+    });
+
+    it('is initialized', async function () {
+      expect(await priceForToBN(this.oracle)).to.be.bignumber.closeTo(cents(110), EPSILON);
+      expect(await this.oracle.latestElapsed()).to.be.bignumber.equal(new BN(86400));
+      expect(await this.oracle.setupFor(this.small.address)).to.be.equal(true);
+      expect(await this.oracle.initializedFor(this.small.address)).to.be.equal(true);
+      expect(await this.oracle.cumulativeFor(this.small.address)).to.be.bignumber.equal(uint112sSmall(this.timediff, 1100000, 1000000));
+      expect(await this.oracle.timestampFor(this.small.address)).to.be.bignumber.equal(this.timestamp);
     });
   });
 });
