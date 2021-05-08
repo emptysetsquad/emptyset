@@ -82,7 +82,7 @@ contract ReserveVault is ReserveAccessors {
     }
 
     /**
-     * @notice Claims all available governance rewards the external protocol
+     * @notice Claims all available governance rewards from the external protocol
      * @dev Owner only - governance hook
      *      Claims COMP accrued from lending on the USDC pool
      */
@@ -144,7 +144,7 @@ contract ICErc20 {
 }
 
 /**
- * @title ICErc20
+ * @title IComptroller
  * @dev Compound IComptroller interface
  */
 contract IComptroller {
