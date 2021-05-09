@@ -32,7 +32,7 @@ contract Dollar is IManagedToken, Ownable, Permittable {
      * @notice Constructs the Dollar contract
      */
     constructor()
-    ERC20Detailed("Empty Set Dollar", "ESD", 18)
+    ERC20Detailed("Digital Standard Unit", "DSU", 18)
     Permittable()
     public
     { }

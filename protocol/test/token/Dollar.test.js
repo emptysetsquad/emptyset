@@ -23,7 +23,7 @@ const permit = [
 
 async function signPermit(dollar, privateKey, message) {
   const domainData = {
-    name: "Empty Set Dollar",
+    name: "Digital Standard Unit",
     version: "1",
     chainId: "1",
     verifyingContract: dollar,
