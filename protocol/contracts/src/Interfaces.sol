@@ -67,13 +67,6 @@ interface IReserve {
      * @return Current ESD redemption price
      */
     function redeemPrice() external view returns (Decimal.D256 memory);
-
-    /**
-     * @notice Allows the stabilizer to mint `amount` ESD to itself, while incrementing reserve debt equivalently
-     * @dev Increments reserve debt by `amount`
-     * @param amount Amount of ESD to borrow
-     */
-    function borrow(uint256 amount) external;
 }
 
 interface IRegistry {
