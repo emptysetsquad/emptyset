@@ -1,4 +1,4 @@
-# døllar.
+# empty set.
 decentral bank
 
 ## audit.
@@ -8,57 +8,37 @@ TBD
 Gitbook architecture overview available [here](https://app.gitbook.com/@emptysetsquad/s/continuous-esd/).
 
 ## tokens.
-### dollar
+### stablecoin
 
-- name: `Empty Set Dollar`
-- symbol: `ESD`
+- name: `Digital Standard Unit`
+- symbol: `DSU`
 - decimals: `18`
-- character: `∅ [U+2205], ∅100`
+- character: `⊙ [U+2299], ⊙100`
 - icons: TBD
 
-### stake
+### governance token
 
-- name: `Empty Set Dollar Stake`
-- symbol: `ESDS`
+- name: `Empty Set Share`
+- symbol: `ESS`
 - decimals: `18`
-- character: `∞ [U+221E], ∞100`
+- character: `∅ [U+2205], ∅100`
 - icons: TBD
 
 ## contracts.
 ### mainnet
 - `` **Reserve**
-- `` **Stabilizer**
 - `` **GovernorAlpha**
 - `` **Timelock**
 - `` **ProxyAdmin**
 - `` **Stake**
 - `` **Dollar**
-- `` **Oracle**
 - `` **Registry**
 - `` **Migrator**
-- `` **Uniswap ESD Incentivizer**
-- `` **Uniswap ESDS Incentivizer**
-- `` **Curve ESD Incentivizer**
-
-### ropsten
-- `` **Reserve**
-- `` **Stabilizer**
-- `` **GovernorAlpha**
-- `` **Timelock**
-- `` **ProxyAdmin**
-- `` **Stake**
-- `` **Dollar**
-- `` **Oracle**
-- `` **Registry**
-- `` **Migrator**
-- `` **Uniswap ESD Incentivizer**
-- `` **Uniswap ESDS Incentivizer**
-- `` **Curve ESD Incentivizer**
+- `` **Uniswap ESS Incentivizer**
+- `` **Curve DSU Incentivizer**
 
 ## risk.
-This project's code has been audited, and we've put a great deal of care into designing the system in the most secure way possible. Even so, there is always a risk of loss of funds when interacting with the included code due to security bugs or mechanism failures.
-
-This project is an experiment. We appreciate those willing to help us test this novel mechanism, but please take time to understand the risks involved before doing so.
+This project's code has been audited, and we've put a great deal of care into designing the system in the most secure way possible. Even so, there is always a risk of loss of funds when interacting with the included code.
 
 <br>
 

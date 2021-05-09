@@ -26,7 +26,7 @@ describe('Vester', function () {
     await this.stake.mint(ONE_UNIT.muln(1000000), {from: reserveAddress});
     await this.stake.transfer(this.vester.address, ONE_UNIT.muln(1000000), {from: reserveAddress});
 
-    this.esds = await MockGovToken.new("Empty Set Dollar Stake", "ESDS", 18, {from: reserveAddress});
+    this.ess = await MockGovToken.new("Empty Set Share", "ESS", 18, {from: reserveAddress});
   });
 
   describe('transferBeneficiary', function () {
@@ -87,17 +87,17 @@ describe('Vester', function () {
 
   describe('delegate', function () {
     beforeEach(async function () {
-      this.result = await this.vester.delegate(this.esds.address, delegateAddress, {from: userAddress});
+      this.result = await this.vester.delegate(this.ess.address, delegateAddress, {from: userAddress});
       this.txHash = this.result.tx;
     });
 
     it('delegates', async function () {
-      expect(await this.esds.delegatee()).to.be.equal(delegateAddress);
+      expect(await this.ess.delegatee()).to.be.equal(delegateAddress);
     });
 
     describe('not owner', function () {
       it('reverts', async function () {
-        await expectRevert(this.vester.delegate(this.esds.address, delegateAddress, {from: reserveAddress}), "Vester: not beneficiary");
+        await expectRevert(this.vester.delegate(this.ess.address, delegateAddress, {from: reserveAddress}), "Vester: not beneficiary");
       });
     });
   });
