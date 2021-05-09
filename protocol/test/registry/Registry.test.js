@@ -154,62 +154,6 @@ describe('Registry', function () {
     });
   });
 
-  describe('setStabilizer', function () {
-    describe('when called', function () {
-      beforeEach('call', async function () {
-        await this.registry.setStabilizer(this.testContract.address, {from: ownerAddress});
-      });
-
-      it('sets new value', async function () {
-        expect(await this.registry.stabilizer()).to.be.equal(this.testContract.address);
-      });
-    });
-
-    describe('when not owner', function () {
-      it('reverts', async function () {
-        await expectRevert(
-          this.registry.setStabilizer(this.testContract.address, {from: userAddress}),
-          "Ownable: caller is not the owner");
-      });
-    });
-
-    describe('when not contract', function () {
-      it('reverts', async function () {
-        await expectRevert(
-          this.registry.setStabilizer(testAddress, {from: ownerAddress}),
-          "Registry: not contract");
-      });
-    });
-  });
-
-  describe('setOracle', function () {
-    describe('when called', function () {
-      beforeEach('call', async function () {
-        await this.registry.setOracle(this.testContract.address, {from: ownerAddress});
-      });
-
-      it('sets new value', async function () {
-        expect(await this.registry.oracle()).to.be.equal(this.testContract.address);
-      });
-    });
-
-    describe('when not owner', function () {
-      it('reverts', async function () {
-        await expectRevert(
-          this.registry.setOracle(this.testContract.address, {from: userAddress}),
-          "Ownable: caller is not the owner");
-      });
-    });
-
-    describe('when not contract', function () {
-      it('reverts', async function () {
-        await expectRevert(
-          this.registry.setOracle(testAddress, {from: ownerAddress}),
-          "Registry: not contract");
-      });
-    });
-  });
-
   describe('setGovernor', function () {
     describe('when called', function () {
       beforeEach('call', async function () {

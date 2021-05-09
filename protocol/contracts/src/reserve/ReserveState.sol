@@ -27,36 +27,6 @@ import "../common/Implementation.sol";
 contract ReserveTypes {
 
     /**
-     * @notice Stores state related to borrowing
-     */
-    struct Borrower {
-        /**
-         * @notice Current amount of reserve debt for stabilizer borrowing
-         */
-        uint256 debt;
-
-        /**
-         * @notice Current borrow controller state
-         */
-        BorrowController controller;
-    }
-
-    /**
-     * @notice Stores state related to the borrow controller
-     */
-    struct BorrowController {
-        /**
-         * @notice Amount borrowed during the current rate-limiting window
-         */
-        uint256 borrowed;
-
-        /**
-         * @notice Last timestamp the rate-limiting window was updated
-         */
-        uint256 last;
-    }
-
-    /**
      * @notice Stores state for a single order
      */
     struct Order {
@@ -75,16 +45,6 @@ contract ReserveTypes {
      * @notice Stores state for the entire reserve
      */
     struct State {
-
-        /**
-         * @notice Current redemption tax for artificially lowering the {redeemPrice}
-         */
-        Decimal.D256 redemptionTax;
-
-        /**
-         * @notice Stores state related to borrowing
-         */
-        ReserveTypes.Borrower borrower;
 
         /**
          * @notice Mapping of all registered limit orders
@@ -107,102 +67,12 @@ contract ReserveState {
 }
 
 /**
- * @title ReserveAdmin
- * @notice Reserve admin state accessor helpers
- */
-contract ReserveAdmin is Implementation, ReserveState {
-
-    /**
-     * @notice Cap redemption tax at 100% to avoid math errors
-     */
-    uint256 private constant REDEMPTION_TAX_CAP = 1e18;
-
-    /**
-     * @notice Emitted when {redemptionTax} is updated with `newRedemptionTax`
-     */
-    event RedemptionTaxUpdate(uint256 newRedemptionTax);
-
-    // COMPTROLLER
-
-    /**
-     * @notice Current redemption tax for artificially lowering the {redeemPrice}
-     * @return Redemption tax
-     */
-    function redemptionTax() public view returns (Decimal.D256 memory) {
-        return _state.redemptionTax;
-    }
-
-    /**
-     * @notice Sets the redemption tax to `newRedemptionTax`
-     * @dev Owner only - governance hook
-     * @param newRedemptionTax New redemption tax
-     */
-    function setRedemptionTax(uint256 newRedemptionTax) external onlyOwner {
-        require(newRedemptionTax <= REDEMPTION_TAX_CAP, "ReserveAdmin: too large");
-
-        _state.redemptionTax = Decimal.D256({value: newRedemptionTax});
-
-        emit RedemptionTaxUpdate(newRedemptionTax);
-    }
-}
-
-/**
  * @title ReserveAccessors
  * @notice Reserve state accessor helpers
  */
-contract ReserveAccessors is ReserveAdmin {
+contract ReserveAccessors is Implementation, ReserveState {
     using SafeMath for uint256;
     using Decimal for Decimal.D256;
-
-    // COMPTROLLER
-
-    /**
-     * @notice Current reserve debt accrued from stabilizer borrowing
-     * @return Reserve debt
-     */
-    function debt() public view returns (uint256) {
-        return _state.borrower.debt;
-    }
-
-    /**
-     * @notice Increments the reserve debt by `amount`
-     * @dev Internal only
-     * @param amount Amount to increment debt in ESD
-     */
-    function _incrementDebt(uint256 amount) internal {
-        _state.borrower.debt = _state.borrower.debt.add(amount);
-    }
-
-    /**
-     * @notice Decrements the reserve debt by `amount`
-     * @dev Internal only
-            Reverts when insufficient debt with reason `reason`
-     * @param amount Amount to decrement debt in ESD
-     * @param reason Revert reason
-     */
-    function _decrementDebt(uint256 amount, string memory reason) internal {
-        _state.borrower.debt = _state.borrower.debt.sub(amount, reason);
-    }
-
-    /**
-     * @notice Current borrow controller state for rate-limiting borrowing
-     * @dev Internal only
-     * @return Borrow controller
-     */
-    function _borrowController() internal view returns (ReserveTypes.BorrowController memory) {
-        return _state.borrower.controller;
-    }
-
-    /**
-     * @notice Updates the borrow controller state
-     * @dev Internal only
-     * @param newBorrowed Newly calculated borrow amount for the current window
-     * @param newLast Timestamp of update
-     */
-    function _updateBorrowController(uint256 newBorrowed, uint256 newLast) internal {
-        _state.borrower.controller.borrowed = newBorrowed;
-        _state.borrower.controller.last = newLast;
-    }
 
     // SWAPPER
 

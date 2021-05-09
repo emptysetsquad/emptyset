@@ -58,16 +58,6 @@ contract Registry is IRegistry, Ownable {
     address public reserve;
 
     /**
-     * @notice ESD stabilizer contract
-     */
-    address public stabilizer;
-
-    /**
-     * @notice ESD oracle contract
-     */
-    address public oracle;
-
-    /**
      * @notice ESD governor contract
      */
     address public governor;
@@ -135,26 +125,6 @@ contract Registry is IRegistry, Ownable {
     }
 
     /**
-     * @notice Registers a new address for the stabilizer
-     * @dev Owner only - governance hook
-     * @param newValue New address to register
-     */
-    function setStabilizer(address newValue) external validate(newValue) onlyOwner {
-        stabilizer = newValue;
-        emit Registration("STABILIZER", newValue);
-    }
-
-    /**
-     * @notice Registers a new address for the oracle
-     * @dev Owner only - governance hook
-     * @param newValue New address to register
-     */
-    function setOracle(address newValue) external validate(newValue) onlyOwner {
-        oracle = newValue;
-        emit Registration("ORACLE", newValue);
-    }
-
-    /**
      * @notice Registers a new address for the governor
      * @dev Owner only - governance hook
      * @param newValue New address to register
@@ -189,7 +159,6 @@ contract Registry is IRegistry, Ownable {
      * @notice Ensures the newly supplied value is a deployed contract
      * @param newValue New address to validate
      */
-    //TODO: Add this check to setRegistry in Implementation and possibly other setters as well
     modifier validate(address newValue) {
         require(newValue != address(this), "Registry: this");
         require(Address.isContract(newValue), "Registry: not contract");

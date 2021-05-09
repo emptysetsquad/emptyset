@@ -22,33 +22,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./lib/Decimal.sol";
 
 /**
- * @title IToken
- * @notice Accompanies IERC20 to get decimals() which is not explicitly part of the standard
- */
-interface IToken {
-
-    /**
-     * @notice Display decimals of precision for the token
-     * @return token decimals
-     */
-    function decimals() external view returns (uint8);
-}
-
-/**
- * @title IUSDC
- * @notice Extra functions available on the USDC token aside from the standard IERC20 interface
- */
-interface IUSDC {
-
-    /**
-     * @notice Checks whether `_account` has been blacklisted for USDC transfers
-     * @param _account Account to check status for
-     * @return Whether `_account` is blacklisted
-     */
-    function isBlacklisted(address _account) external view returns (bool);
-}
-
-/**
  * @title IManagedToken
  * @notice Generic interface for ERC20 tokens that can be minted and burned by their owner
  * @dev Used by Dollar and Stake in this protocol
@@ -80,40 +53,6 @@ interface IGovToken {
      * @param delegatee The address to delegate votes to
      */
     function delegate(address delegatee) external;
-}
-
-/**
- * @title IOracle
- * @notice Interface for the Uniswap V2 TWAP oracle
- */
-interface IOracle {
-
-    /**
-     * @notice Setup the token for price tracking
-     * @param token EC20 token to register
-     */
-    function setup(address token) external;
-
-    /**
-     * @notice Capture the TWAP price since last capture
-     * @param token EC20 token to capture
-     * @return The price decimal-normalized as a Decimal.256, seconds since last capture, and oracle health flag
-     */
-    function capture(address token) external returns (Decimal.D256 memory, uint256, bool);
-
-    /**
-      * @notice Whether the `token` has been setup by the owner
-      * @param token EC20 token to check
-      * @return token setup status
-      */
-    function setupFor(address token) external view returns (bool);
-
-    /**
-     * @notice The address of the USDC-`token` Uniswap V2 pair
-     * @param token EC20 token to check
-     * @return Uniswap V2 pair address
-     */
-    function pairFor(address token) external view returns (IUniswapV2Pair);
 }
 
 /**
@@ -164,16 +103,6 @@ interface IRegistry {
     function reserve() external view returns (address);
 
     /**
-     * @notice ESD stabilizer contract
-     */
-    function stabilizer() external view returns (address);
-
-    /**
-     * @notice ESD oracle contract
-     */
-    function oracle() external view returns (address);
-
-    /**
      * @notice ESD governor contract
      */
     function governor() external view returns (address);
@@ -222,20 +151,6 @@ interface IRegistry {
      * @param newValue New address to register
      */
     function setReserve(address newValue) external;
-
-    /**
-     * @notice Registers a new address for the stabilizer
-     * @dev Owner only - governance hook
-     * @param newValue New address to register
-     */
-    function setStabilizer(address newValue) external;
-
-    /**
-     * @notice Registers a new address for the oracle
-     * @dev Owner only - governance hook
-     * @param newValue New address to register
-     */
-    function setOracle(address newValue) external;
 
     /**
      * @notice Registers a new address for the governor

@@ -1,5 +1,5 @@
 /*
-    Copyright 2020, 2021 Empty Set Squad <emptysetsquad@protonmail.com>
+    Copyright 2021 Empty Set Squad <emptysetsquad@protonmail.com>
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -17,16 +17,16 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../src/Interfaces.sol";
+import "../../../src/Interfaces.sol";
 
-contract MockUSDC is IUSDC {
-    bool private _blacklisted;
+contract MockSettableStabilizer {
+    IReserve internal _reserve;
 
-    function isBlacklisted(address _account) external view returns (bool) {
-        return _blacklisted;
+    function set(IReserve reserve) external {
+        _reserve = reserve;
     }
 
-    function setIsBlacklisted(bool blacklisted) external {
-        _blacklisted = blacklisted;
+    function borrow(uint256 amount) external {
+        _reserve.borrow(amount);
     }
 }
