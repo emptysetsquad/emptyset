@@ -68,6 +68,24 @@ contract Vester is TokenVesting {
         IGovToken(token).delegate(delegatee);
     }
 
+        /**
+     * @notice Transfers the specified `amount` of vested `token` to beneficiary. Only callable by beneficiary
+     * @param token ERC20 token which is being vested
+     * @param amount Quantity of token to be released
+     */
+    function release(IERC20 token, uint256 amount) public onlyBeneficiary {
+        uint256 unreleased = _releasableAmount(token);
+
+        require(unreleased > 0, "TokenVesting: no tokens are due");
+
+        uint256 releaseAmount = unreleased > amount ? amount : unreleased;
+        _released[address(token)] = _released[address(token)].add(releaseAmount);
+
+        token.safeTransfer(_beneficiary, releaseAmount);
+
+        emit TokensReleased(address(token), releaseAmount);
+    }
+
     /**
      * @notice Only beneficiary may call
      */

@@ -124,22 +124,6 @@ contract TokenVesting is Ownable {
     }
 
     /**
-     * @notice Transfers vested tokens to beneficiary.
-     * @param token ERC20 token which is being vested
-     */
-    function release(IERC20 token) public {
-        uint256 unreleased = _releasableAmount(token);
-
-        require(unreleased > 0, "TokenVesting: no tokens are due");
-
-        _released[address(token)] = _released[address(token)].add(unreleased);
-
-        token.safeTransfer(_beneficiary, unreleased);
-
-        emit TokensReleased(address(token), unreleased);
-    }
-
-    /**
      * @notice Allows the owner to revoke the vesting. Tokens already vested
      * remain in the contract, the rest are returned to the owner.
      * @param token ERC20 token which is being vested
