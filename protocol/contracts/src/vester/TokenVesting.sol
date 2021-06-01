@@ -46,7 +46,7 @@ contract TokenVesting is Ownable {
 
     bool private _revocable;
 
-    mapping (address => uint256) private _released;
+    mapping (address => uint256) internal _released;
     mapping (address => bool) private _revoked;
 
     /**
@@ -148,7 +148,7 @@ contract TokenVesting is Ownable {
      * @dev Calculates the amount that has already vested but hasn't been released yet.
      * @param token ERC20 token which is being vested
      */
-    function _releasableAmount(IERC20 token) private view returns (uint256) {
+    function _releasableAmount(IERC20 token) internal view returns (uint256) {
         return _vestedAmount(token).sub(_released[address(token)]);
     }
 
