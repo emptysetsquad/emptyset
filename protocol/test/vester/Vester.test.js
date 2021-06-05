@@ -12,7 +12,7 @@ const ONE_UNIT = ONE_BIP.mul(new BN(10000));
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const { MAX_UINT256 } = constants
 
-describe('Vester', function () {
+describe.only('Vester', function () {
   this.retries(10);
   this.timeout(5000);
 
@@ -150,6 +150,17 @@ describe('Vester', function () {
           amount: ONE_UNIT.muln(50000),
         });
       });
+    });
+  });
+
+  describe('releasableAmount', function () {
+    beforeEach(async function() {
+      await time.increase(86400 * 3);
+    });
+
+
+    it('returns the correct amount', async function () {
+      expect(await this.vester.releaseableAmount(this.stake.address)).to.be.bignumber.equal(ONE_UNIT.muln(100000))
     });
   });
 });
