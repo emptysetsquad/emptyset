@@ -8,7 +8,6 @@ const Dollar = contract.fromArtifact('Dollar');
 const Registry = contract.fromArtifact('Registry');
 const MockCErc20 = contract.fromArtifact('MockCErc20');
 const MockReserveComptroller = contract.fromArtifact('MockReserveComptroller');
-const MockSettableStabilizer = contract.fromArtifact('MockSettableStabilizer');
 
 const ONE_USDC = new BN(1000000);
 const ONE_BIP = new BN(10).pow(new BN(14));
@@ -31,8 +30,6 @@ describe('ReserveComptroller', function () {
     await this.comptroller.takeOwnership({from: ownerAddress});
     await this.comptroller.setup({from: ownerAddress});
     await this.comptroller.setRegistry(this.registry.address, {from: ownerAddress});
-    this.stabilizer = await MockSettableStabilizer.new({from: ownerAddress});
-    await this.stabilizer.set(this.comptroller.address);
     await this.dollar.transferOwnership(this.comptroller.address, {from: ownerAddress});
     await this.registry.setUsdc(this.collateral.address, {from: ownerAddress});
     await this.registry.setCUsdc(this.cUsdc.address, {from: ownerAddress});

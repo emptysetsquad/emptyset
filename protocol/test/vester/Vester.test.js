@@ -1,6 +1,6 @@
 const { accounts, contract } = require('@openzeppelin/test-environment');
 
-const { BN, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
+const { BN, expectEvent, expectRevert, time, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 
 const Stake = contract.fromArtifact('Stake');
@@ -10,8 +10,9 @@ const MockGovToken = contract.fromArtifact('MockGovToken');
 const ONE_BIP = new BN(10).pow(new BN(14));
 const ONE_UNIT = ONE_BIP.mul(new BN(10000));
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const { MAX_UINT256 } = constants
 
-describe('Vester', function () {
+describe.only('Vester', function () {
   this.retries(10);
   this.timeout(5000);
 
@@ -65,7 +66,7 @@ describe('Vester', function () {
       describe('can withdraw to new beneficiary', function () {
         beforeEach(async function () {
           await time.increase(86400 * 3);
-          this.result = await this.vester.release(this.stake.address, {from: userAddress})
+          this.result = await this.vester.release(this.stake.address, MAX_UINT256, {from: userAddressNew})
           this.txHash = this.result.tx;
         });
 
@@ -99,6 +100,67 @@ describe('Vester', function () {
       it('reverts', async function () {
         await expectRevert(this.vester.delegate(this.ess.address, delegateAddress, {from: reserveAddress}), "Vester: not beneficiary");
       });
+    });
+  });
+
+  describe('release', function () {
+    describe('not beneficiary', function () {
+      it('reverts', async function () {
+        await expectRevert(
+          this.vester.release(this.stake.address, 100, {from: userAddressNew}),
+          "Vester: not beneficiary");
+      });
+    });
+
+    describe('simple', function () {
+      beforeEach(async function() {
+        await time.increase(86400 * 3);
+        this.result = await this.vester.release(this.stake.address, MAX_UINT256, {from: userAddress});
+        this.txHash = this.result.tx;
+      });
+
+      it('withdraws', async function () {
+        expect(await this.stake.balanceOf(this.vester.address)).to.be.bignumber.equal(ONE_UNIT.muln(900000));
+        expect(await this.stake.balanceOf(userAddress)).to.be.bignumber.equal(ONE_UNIT.muln(100000));
+      });
+
+      it('emits TokensReleased event', async function () {
+        const event = await expectEvent.inTransaction(this.txHash, Vester, 'TokensReleased', {
+          token: this.stake.address,
+          amount: ONE_UNIT.muln(100000),
+        });
+      });
+    });
+
+    describe('partial', function () {
+      beforeEach(async function() {
+        await time.increase(86400 * 3);
+        this.result = await this.vester.release(this.stake.address, ONE_UNIT.muln(50000), {from: userAddress});
+        this.txHash = this.result.tx;
+      });
+
+      it('withdraws', async function () {
+        expect(await this.stake.balanceOf(this.vester.address)).to.be.bignumber.equal(ONE_UNIT.muln(950000));
+        expect(await this.stake.balanceOf(userAddress)).to.be.bignumber.equal(ONE_UNIT.muln(50000));
+      });
+
+      it('emits TokensReleased event', async function () {
+        const event = await expectEvent.inTransaction(this.txHash, Vester, 'TokensReleased', {
+          token: this.stake.address,
+          amount: ONE_UNIT.muln(50000),
+        });
+      });
+    });
+  });
+
+  describe('releasableAmount', function () {
+    beforeEach(async function() {
+      await time.increase(86400 * 3);
+    });
+
+
+    it('returns the correct amount', async function () {
+      expect(await this.vester.releaseableAmount(this.stake.address)).to.be.bignumber.equal(ONE_UNIT.muln(100000))
     });
   });
 });

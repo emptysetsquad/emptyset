@@ -46,7 +46,7 @@ contract TokenVesting is Ownable {
 
     bool private _revocable;
 
-    mapping (address => uint256) private _released;
+    mapping (address => uint256) internal _released;
     mapping (address => bool) private _revoked;
 
     /**
@@ -124,22 +124,6 @@ contract TokenVesting is Ownable {
     }
 
     /**
-     * @notice Transfers vested tokens to beneficiary.
-     * @param token ERC20 token which is being vested
-     */
-    function release(IERC20 token) public {
-        uint256 unreleased = _releasableAmount(token);
-
-        require(unreleased > 0, "TokenVesting: no tokens are due");
-
-        _released[address(token)] = _released[address(token)].add(unreleased);
-
-        token.safeTransfer(_beneficiary, unreleased);
-
-        emit TokensReleased(address(token), unreleased);
-    }
-
-    /**
      * @notice Allows the owner to revoke the vesting. Tokens already vested
      * remain in the contract, the rest are returned to the owner.
      * @param token ERC20 token which is being vested
@@ -164,7 +148,7 @@ contract TokenVesting is Ownable {
      * @dev Calculates the amount that has already vested but hasn't been released yet.
      * @param token ERC20 token which is being vested
      */
-    function _releasableAmount(IERC20 token) private view returns (uint256) {
+    function _releasableAmount(IERC20 token) internal view returns (uint256) {
         return _vestedAmount(token).sub(_released[address(token)]);
     }
 

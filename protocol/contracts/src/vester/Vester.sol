@@ -69,6 +69,33 @@ contract Vester is TokenVesting {
     }
 
     /**
+     * @notice Transfers the specified `amount` of vested `token` to beneficiary. Only callable by beneficiary
+     * @param token ERC20 token which is being vested
+     * @param amount Quantity of token to be released
+     */
+    function release(IERC20 token, uint256 amount) public onlyBeneficiary {
+        uint256 unreleased = _releasableAmount(token);
+        uint256 releaseAmount = unreleased > amount ? amount : unreleased;
+
+        require(releaseAmount > 0, "TokenVesting: no tokens are due");
+
+        _released[address(token)] = _released[address(token)].add(releaseAmount);
+
+        token.safeTransfer(_beneficiary, releaseAmount);
+
+        emit TokensReleased(address(token), releaseAmount);
+    }
+
+    /**
+     * @notice passthrough to internal _releaseableAmount function
+     * @dev Returns the amount that has already vested but hasn't been released yet.
+     * @param token ERC20 token which is being vested
+     */
+    function releaseableAmount(IERC20 token) public view returns (uint256) {
+        return _releasableAmount(token);
+    }
+
+    /**
      * @notice Only beneficiary may call
      */
     modifier onlyBeneficiary {
