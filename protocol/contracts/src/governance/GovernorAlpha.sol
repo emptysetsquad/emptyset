@@ -30,7 +30,7 @@ contract GovernorAlpha {
      */
 
     /// @notice The name of this contract
-    string public constant name = "Empty Set Dollar Governor Alpha";
+    string public constant name = "Empty Set Governor Alpha";
 
     /// @notice The number of votes in support of a proposal required in order for a quorum to be reached and for a vote to succeed
     /// @dev Initial ESDS supply will be approximately 1.6b - 2.0b depending on initial incentive programs

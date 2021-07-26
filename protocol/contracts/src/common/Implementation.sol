@@ -51,17 +51,17 @@ contract Implementation {
     /**
      * @notice Storage slot with the owner of the contract
      */
-    bytes32 private constant OWNER_SLOT = keccak256("emptysetdollar.v2.implementation.owner");
+    bytes32 private constant OWNER_SLOT = keccak256("emptyset.v2.implementation.owner");
 
     /**
      * @notice Storage slot with the owner of the contract
      */
-    bytes32 private constant REGISTRY_SLOT = keccak256("emptysetdollar.v2.implementation.registry");
+    bytes32 private constant REGISTRY_SLOT = keccak256("emptyset.v2.implementation.registry");
 
     /**
      * @notice Storage slot with the owner of the contract
      */
-    bytes32 private constant NOT_ENTERED_SLOT = keccak256("emptysetdollar.v2.implementation.notEntered");
+    bytes32 private constant NOT_ENTERED_SLOT = keccak256("emptyset.v2.implementation.notEntered");
 
     // UPGRADEABILITY
 

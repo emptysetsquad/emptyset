@@ -12,7 +12,7 @@ const ONE_UNIT = ONE_BIP.mul(new BN(10000));
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const { MAX_UINT256 } = constants
 
-describe.only('Vester', function () {
+describe('Vester', function () {
   this.retries(10);
   this.timeout(5000);
 
