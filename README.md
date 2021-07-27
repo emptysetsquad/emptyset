@@ -1,11 +1,8 @@
 # empty set.
 decentral bank
 
-## audit.
-TBD
-
 ## design.
-Gitbook architecture overview available [here](https://app.gitbook.com/@emptysetsquad/s/continuous-esd/).
+Gitbook architecture overview available [here](https://app.gitbook.com/@emptysetsquad/s/empty-set-v2/).
 
 ## tokens.
 ### stablecoin
@@ -14,7 +11,6 @@ Gitbook architecture overview available [here](https://app.gitbook.com/@emptyset
 - symbol: `DSU`
 - decimals: `18`
 - character: `⊙ [U+2299], ⊙100`
-- icons: TBD
 
 ### governance token
 
@@ -22,20 +18,6 @@ Gitbook architecture overview available [here](https://app.gitbook.com/@emptyset
 - symbol: `ESS`
 - decimals: `18`
 - character: `∅ [U+2205], ∅100`
-- icons: TBD
-
-## contracts.
-### mainnet
-- `` **Reserve**
-- `` **GovernorAlpha**
-- `` **Timelock**
-- `` **ProxyAdmin**
-- `` **Stake**
-- `` **Dollar**
-- `` **Registry**
-- `` **Migrator**
-- `` **Uniswap ESS Incentivizer**
-- `` **Curve DSU Incentivizer**
 
 ## risk.
 This project's code has been audited, and we've put a great deal of care into designing the system in the most secure way possible. Even so, there is always a risk of loss of funds when interacting with the included code.
