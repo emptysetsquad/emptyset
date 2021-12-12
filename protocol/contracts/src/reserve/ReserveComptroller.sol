@@ -47,6 +47,16 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
     event Redeem(address indexed account, uint256 costAmount, uint256 redeemAmount);
 
     /**
+     * @notice Emitted when `account` borrows `borrowAmount` ESD from the reserve
+     */
+    event Borrow(address indexed account, uint256 borrowAmount);
+
+    /**
+     * @notice Emitted when `account` repays `repayAmount` ESD to the reserve
+     */
+    event Repay(address indexed account, uint256 repayAmount);
+
+    /**
      * @notice Helper constant to convert ESD to USDC and vice versa
      */
     uint256 private constant USDC_DECIMAL_DIFF = 1e12;
@@ -120,6 +130,43 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
         _transfer(registry().usdc(), msg.sender, redeemAmount);
 
         emit Redeem(msg.sender, amount, redeemAmount);
+    }
+
+    /**
+     * @notice Lends `amount` ESD to `to` while recording the corresponding debt entry
+     * @dev Non-reentrant
+     *      Caller must be owner
+     *      Used to pre-fund trusted contracts with ESD without backing (e.g. batchers)
+     * @param account Address to send the borrowed ESD to
+     * @param amount Amount of ESD to borrow
+     */
+    function borrow(address account, uint256 amount) external onlyOwner nonReentrant {
+        // hardcode-allow single batcher for now
+        require(account == address(0), "ReserveComptroller: not batcher"); // TODO: fill in address after deployment
+
+        _incrementDebt(account, amount);
+        _mintDollar(account, amount);
+
+        emit Borrow(account, amount);
+    }
+
+    /**
+     * @notice Repays `amount` ESD on behalf of `to` while reducing its corresponding debt
+     * @dev Non-reentrant
+     *      Caller must be owner
+     *      Used to pre-fund trusted contracts with ESD without backing (e.g. batchers)
+     * @param account Address to repay ESD on behalf of
+     * @param amount Amount of ESD to repay
+     */
+    function repay(address account, uint256 amount) external nonReentrant {
+        // hardcode-allow single batcher for now
+        require(msg.sender == address(0) && account == address(0), "ReserveComptroller: not batcher"); // TODO: fill in address after deployment
+
+        _decrementDebt(account, amount, "ReserveComptroller: insufficient debt");
+        _transferFrom(registry().dollar(), msg.sender, address(this), amount);
+        _burnDollar(amount);
+
+        emit Repay(account, amount);
     }
 
     // INTERNAL

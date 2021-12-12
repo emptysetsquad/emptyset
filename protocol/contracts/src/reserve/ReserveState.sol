@@ -47,6 +47,16 @@ contract ReserveTypes {
     struct State {
 
         /**
+         * @notice Total debt
+         */
+        uint256 totalDebt;
+
+        /**
+         * @notice Mapping of total debt per borrower
+         */
+        mapping(address => uint256) debt;
+
+        /**
          * @notice Mapping of all registered limit orders
          */
         mapping(address => mapping(address => ReserveTypes.Order)) orders;
@@ -87,6 +97,22 @@ contract ReserveAccessors is Implementation, ReserveState {
     }
 
     /**
+     * @notice Returns the total debt outstanding
+     * @return Total debt
+     */
+    function totalDebt() public view returns (uint256) {
+        return _state.totalDebt;
+    }
+
+    /**
+     * @notice Returns the total debt outstanding for `borrower`
+     * @return Total debt for borrower
+     */
+    function debt(address borrower) public view returns (uint256) {
+        return _state.debt[borrower];
+    }
+
+    /**
      * @notice Sets the `price` and `amount` of the specified `makerToken`-`takerToken` order
      * @dev Internal only
      * @param makerToken Token that the reserve wishes to sell
@@ -109,5 +135,29 @@ contract ReserveAccessors is Implementation, ReserveState {
      */
     function _decrementOrderAmount(address makerToken, address takerToken, uint256 amount, string memory reason) internal {
         _state.orders[makerToken][takerToken].amount = _state.orders[makerToken][takerToken].amount.sub(amount, reason);
+    }
+
+    /**
+     * @notice Decrements the debt for `borrower`
+     * @dev Internal only
+     * @param borrower Address that is drawing the debt
+     * @param amount Amount of debt to draw
+     */
+    function _incrementDebt(address borrower, uint256 amount) internal {
+        _state.totalDebt = _state.totalDebt.add(amount);
+        _state.debt[borrower] = _state.debt[borrower].add(amount);
+    }
+
+    /**
+     * @notice Increments the debt for `borrower`
+     * @dev Internal only
+            Reverts when insufficient amount with reason `reason`
+     * @param borrower Address that is drawing the debt
+     * @param amount Amount of debt to draw
+     * @param reason revert reason
+     */
+    function _decrementDebt(address borrower, uint256 amount, string memory reason) internal {
+        _state.totalDebt = _state.totalDebt.sub(amount);
+        _state.debt[borrower] = _state.debt[borrower].sub(amount, reason);
     }
 }
