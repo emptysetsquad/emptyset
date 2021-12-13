@@ -8,7 +8,7 @@ const MockReserveState = contract.fromArtifact('MockReserveState');
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 describe('ReserveState', function () {
-  const [ ownerAddress, registry, newOwner, token1, token2] = accounts;
+  const [ ownerAddress, registry, newOwner, token1, token2, batcher] = accounts;
 
   beforeEach(async function () {
     this.accessors = await MockReserveState.new({from: ownerAddress});
@@ -57,6 +57,47 @@ describe('ReserveState', function () {
         await expectRevert(
           this.accessors.decrementOrderAmountE(token1, token2, 300, "decrementOrderAmount - 1"),
           "decrementOrderAmount - 1");
+      });
+    });
+  });
+
+  /**
+   * Comptroller
+   */
+
+  describe('incrementDebt', function () {
+    describe('when called', function () {
+      beforeEach('call', async function () {
+        await this.accessors.incrementDebtE(batcher, 100);
+        await this.accessors.incrementDebtE(batcher, 100);
+      });
+
+      it('sets new value', async function () {
+        expect(await this.accessors.totalDebt()).to.be.bignumber.equal(new BN(200));
+        expect(await this.accessors.debt(batcher)).to.be.bignumber.equal(new BN(200));
+      });
+    });
+  });
+
+  describe('decrementDebt', function () {
+    describe('when called', function () {
+      beforeEach('call', async function () {
+        await this.accessors.incrementDebtE(batcher, 200);
+        await this.accessors.decrementDebtE(batcher, 100, "decrementDebt - 1");
+        await this.accessors.decrementDebtE(batcher, 100, "decrementDebt - 2");
+      });
+
+      it('sets new value', async function () {
+        expect(await this.accessors.totalDebt()).to.be.bignumber.equal(new BN(0));
+        expect(await this.accessors.debt(batcher)).to.be.bignumber.equal(new BN(0));
+      });
+    });
+
+    describe('when called erroneously', function () {
+      it('reverts', async function () {
+        await expectRevert(
+            this.accessors.decrementDebtE(batcher, 100, "decrementDebt - 1"),
+            "decrementDebt - 1");
       });
     });
   });

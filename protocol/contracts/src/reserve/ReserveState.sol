@@ -157,7 +157,7 @@ contract ReserveAccessors is Implementation, ReserveState {
      * @param reason revert reason
      */
     function _decrementDebt(address borrower, uint256 amount, string memory reason) internal {
-        _state.totalDebt = _state.totalDebt.sub(amount);
+        _state.totalDebt = _state.totalDebt.sub(amount, reason);
         _state.debt[borrower] = _state.debt[borrower].sub(amount, reason);
     }
 }
