@@ -36,6 +36,8 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
     using Decimal for Decimal.D256;
     using SafeERC20 for IERC20;
 
+    address private constant BATCHER_ADDRESS = address(1); // TODO: fill in address after deployment
+
     /**
      * @notice Emitted when `account` purchases `mintAmount` ESD from the reserve for `costAmount` USDC
      */
@@ -79,7 +81,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @return Reserve ratio
      */
     function reserveRatio() public view returns (Decimal.D256 memory) {
-        uint256 issuance = _totalSupply(registry().dollar());
+        uint256 issuance = _totalSupply(registry().dollar()).sub(totalDebt());
         return issuance == 0 ? Decimal.one() : Decimal.ratio(_fromUsdcAmount(reserveBalance()), issuance);
     }
 
@@ -142,7 +144,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      */
     function borrow(address account, uint256 amount) external onlyOwner nonReentrant {
         // hardcode-allow single batcher for now
-        require(account == address(0), "ReserveComptroller: not batcher"); // TODO: fill in address after deployment
+        require(account == BATCHER_ADDRESS, "ReserveComptroller: not batcher");
 
         _incrementDebt(account, amount);
         _mintDollar(account, amount);
@@ -160,7 +162,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      */
     function repay(address account, uint256 amount) external nonReentrant {
         // hardcode-allow single batcher for now
-        require(msg.sender == address(0) && account == address(0), "ReserveComptroller: not batcher"); // TODO: fill in address after deployment
+        require(msg.sender == BATCHER_ADDRESS && account == BATCHER_ADDRESS, "ReserveComptroller: not batcher");
 
         _decrementDebt(account, amount, "ReserveComptroller: insufficient debt");
         _transferFrom(registry().dollar(), msg.sender, address(this), amount);
