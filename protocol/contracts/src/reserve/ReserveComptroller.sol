@@ -36,8 +36,6 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
     using Decimal for Decimal.D256;
     using SafeERC20 for IERC20;
 
-    address private constant BATCHER_ADDRESS = address(1); // TODO: fill in address after deployment
-
     /**
      * @notice Emitted when `account` purchases `mintAmount` ESD from the reserve for `costAmount` USDC
      */
@@ -143,8 +141,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @param amount Amount of ESD to borrow
      */
     function borrow(address account, uint256 amount) external onlyOwner nonReentrant {
-        // hardcode-allow single batcher for now
-        require(account == BATCHER_ADDRESS, "ReserveComptroller: not batcher");
+        require(_canBorrow(account), "ReserveComptroller: cant borrow");
 
         _incrementDebt(account, amount);
         _mintDollar(account, amount);
@@ -155,14 +152,11 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
     /**
      * @notice Repays `amount` ESD on behalf of `to` while reducing its corresponding debt
      * @dev Non-reentrant
-     *      Caller must be owner
-     *      Used to pre-fund trusted contracts with ESD without backing (e.g. batchers)
      * @param account Address to repay ESD on behalf of
      * @param amount Amount of ESD to repay
      */
     function repay(address account, uint256 amount) external nonReentrant {
-        // hardcode-allow single batcher for now
-        require(msg.sender == BATCHER_ADDRESS && account == BATCHER_ADDRESS, "ReserveComptroller: not batcher");
+        require(_canBorrow(account) && account == msg.sender, "ReserveComptroller: cant repay");
 
         _decrementDebt(account, amount, "ReserveComptroller: insufficient debt");
         _transferFrom(registry().dollar(), msg.sender, address(this), amount);
@@ -258,5 +252,10 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      */
     function _fromUsdcAmount(uint256 usdcAmount) internal pure returns (uint256) {
         return usdcAmount.mul(USDC_DECIMAL_DIFF);
+    }
+
+    function _canBorrow(address account) private pure returns (bool) {
+        if (account == address(1)) return true; // TODO: WrapOnlyBatcher
+        return false;
     }
 }

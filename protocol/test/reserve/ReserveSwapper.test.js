@@ -12,7 +12,7 @@ const ONE_UNIT = ONE_BIP.mul(new BN(10000));
 const MAX_256 = new BN(2).pow(new BN(256)).sub(new BN(1));
 
 describe('ReserveSwapper', function () {
-  this.timeout(5000);
+  this.timeout(10000);
 
   const [ ownerAddress, userAddress ] = accounts;
 

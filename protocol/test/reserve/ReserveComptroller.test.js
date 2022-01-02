@@ -304,11 +304,11 @@ describe('ReserveComptroller', function () {
       });
     });
 
-    describe('not batcher', function () {
+    describe('not allowed to borrow', function () {
       it('reverts', async function () {
         await expectRevert(
             this.comptroller.borrow(userAddress, ONE_UNIT.mul(new BN(100000)), {from: ownerAddress}),
-            "ReserveComptroller: not batcher");
+            "ReserveComptroller: cant borrow");
       });
     });
 
@@ -381,19 +381,19 @@ describe('ReserveComptroller', function () {
       });
     });
 
-    describe('not batcher', function () {
+    describe('account not allowed to borrow', function () {
       it('reverts', async function () {
         await expectRevert(
             this.comptroller.repay(userAddress, ONE_UNIT.mul(new BN(100000)), {from: BATCHER_ADDRESS}),
-            "ReserveComptroller: not batcher");
+            "ReserveComptroller: cant repay");
       });
     });
 
-    describe('not from batcher', function () {
+    describe('sender not allowed to borrow', function () {
       it('reverts', async function () {
         await expectRevert(
             this.comptroller.repay(BATCHER_ADDRESS, ONE_UNIT.mul(new BN(100000)), {from: userAddress}),
-            "ReserveComptroller: not batcher");
+            "ReserveComptroller: cant repay");
       });
     });
   });
