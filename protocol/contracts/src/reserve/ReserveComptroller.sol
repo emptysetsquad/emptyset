@@ -141,7 +141,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @param amount Amount of ESD to borrow
      */
     function borrow(address account, uint256 amount) external onlyOwner nonReentrant {
-        require(_canBorrow(account), "ReserveComptroller: cant borrow");
+        require(_canBorrow(account, amount), "ReserveComptroller: cant borrow");
 
         _incrementDebt(account, amount);
         _mintDollar(account, amount);
@@ -156,8 +156,6 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @param amount Amount of ESD to repay
      */
     function repay(address account, uint256 amount) external nonReentrant {
-        require(_canBorrow(account) && account == msg.sender, "ReserveComptroller: cant repay");
-
         _decrementDebt(account, amount, "ReserveComptroller: insufficient debt");
         _transferFrom(registry().dollar(), msg.sender, address(this), amount);
         _burnDollar(amount);
@@ -254,8 +252,9 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
         return usdcAmount.mul(USDC_DECIMAL_DIFF);
     }
 
-    function _canBorrow(address account) private pure returns (bool) {
-        if (account == address(1)) return true; // TODO: WrapOnlyBatcher
+    function _canBorrow(address account, uint256 amount) private view returns (bool) {
+        uint256 totalBorrowAmount = debt(account).add(amount);
+        if (account == address(1) && totalBorrowAmount <= 1_000_000e18) return true; // TODO: WrapOnlyBatcher
         return false;
     }
 }

@@ -312,6 +312,21 @@ describe('ReserveComptroller', function () {
       });
     });
 
+    describe('not allowed to borrow amount', function () {
+      it('reverts', async function () {
+        await expectRevert(
+            this.comptroller.borrow(BATCHER_ADDRESS, ONE_UNIT.mul(new BN(1000001)), {from: ownerAddress}),
+            "ReserveComptroller: cant borrow");
+      });
+
+      it('reverts', async function () {
+        await this.comptroller.borrow(BATCHER_ADDRESS, ONE_UNIT.mul(new BN(500000)), {from: ownerAddress})
+        await expectRevert(
+            this.comptroller.borrow(BATCHER_ADDRESS, ONE_UNIT.mul(new BN(500001)), {from: ownerAddress}),
+            "ReserveComptroller: cant borrow");
+      });
+    });
+
     describe('not owner', function () {
       it('reverts', async function () {
         await expectRevert(
@@ -378,22 +393,6 @@ describe('ReserveComptroller', function () {
         });
 
         expect(event.args.repayAmount).to.be.bignumber.equal(ONE_UNIT.mul(new BN(100000)));
-      });
-    });
-
-    describe('account not allowed to borrow', function () {
-      it('reverts', async function () {
-        await expectRevert(
-            this.comptroller.repay(userAddress, ONE_UNIT.mul(new BN(100000)), {from: BATCHER_ADDRESS}),
-            "ReserveComptroller: cant repay");
-      });
-    });
-
-    describe('sender not allowed to borrow', function () {
-      it('reverts', async function () {
-        await expectRevert(
-            this.comptroller.repay(BATCHER_ADDRESS, ONE_UNIT.mul(new BN(100000)), {from: userAddress}),
-            "ReserveComptroller: cant repay");
       });
     });
   });
