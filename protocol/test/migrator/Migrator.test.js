@@ -14,7 +14,7 @@ const ONE_BIP = new BN(10).pow(new BN(14));
 const ONE_UNIT = ONE_BIP.mul(new BN(10000));
 
 describe('Migrator', function () {
-  this.timeout(5000);
+  this.timeout(10000);
 
   const [ ownerAddress, userAddress1, userAddress2, userAddress3 ] = accounts;
 

@@ -254,7 +254,12 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
 
     function _canBorrow(address account, uint256 amount) private view returns (bool) {
         uint256 totalBorrowAmount = debt(account).add(amount);
-        if (account == address(1) && totalBorrowAmount <= 1_000_000e18) return true; // TODO: WrapOnlyBatcher
+
+        if ( // WrapOnlyBatcher
+            account == address(0x0B663CeaCEF01f2f88EB7451C70Aa069f19dB997) &&
+            totalBorrowAmount <= 1_000_000e18
+        ) return true;
+
         return false;
     }
 }

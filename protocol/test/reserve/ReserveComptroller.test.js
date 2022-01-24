@@ -12,7 +12,7 @@ const MockReserveComptroller = contract.fromArtifact('MockReserveComptroller');
 const ONE_USDC = new BN(1000000);
 const ONE_BIP = new BN(10).pow(new BN(14));
 const ONE_UNIT = ONE_BIP.mul(new BN(10000));
-const BATCHER_ADDRESS = "0x0000000000000000000000000000000000000001"; // TODO: fill in address after deployment
+const BATCHER_ADDRESS = "0x0B663CeaCEF01f2f88EB7451C70Aa069f19dB997";
 
 describe('ReserveComptroller', function () {
   this.retries(10)
