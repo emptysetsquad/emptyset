@@ -18,7 +18,7 @@ const ONE_UNIT = ONE_BIP.mul(new BN(10000));
  */
 describe('Incentivizer', function () {
   this.retries(10);
-  this.timeout(5000);
+  this.timeout(10000);
 
   const [ ownerAddress, userAddress, userAddress2 ] = accounts;
 

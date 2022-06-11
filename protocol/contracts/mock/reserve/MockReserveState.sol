@@ -31,6 +31,16 @@ contract MockReserveState is ReserveAccessors {
         super._decrementOrderAmount(makerToken, takerToken, amount, reason);
     }
 
+    // COMPTROLLER
+
+    function incrementDebtE(address borrower, uint256 amount) external {
+        super._incrementDebt(borrower, amount);
+    }
+
+    function decrementDebtE(address borrower, uint256 amount, string calldata reason) external {
+        super._decrementDebt(borrower, amount, reason);
+    }
+
     // IMPLEMENTATION
 
     function setRegistryE(address implementation) external {

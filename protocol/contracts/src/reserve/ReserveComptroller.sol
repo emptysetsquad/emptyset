@@ -47,6 +47,16 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
     event Redeem(address indexed account, uint256 costAmount, uint256 redeemAmount);
 
     /**
+     * @notice Emitted when `account` borrows `borrowAmount` ESD from the reserve
+     */
+    event Borrow(address indexed account, uint256 borrowAmount);
+
+    /**
+     * @notice Emitted when `account` repays `repayAmount` ESD to the reserve
+     */
+    event Repay(address indexed account, uint256 repayAmount);
+
+    /**
      * @notice Helper constant to convert ESD to USDC and vice versa
      */
     uint256 private constant USDC_DECIMAL_DIFF = 1e12;
@@ -69,7 +79,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @return Reserve ratio
      */
     function reserveRatio() public view returns (Decimal.D256 memory) {
-        uint256 issuance = _totalSupply(registry().dollar());
+        uint256 issuance = _totalSupply(registry().dollar()).sub(totalDebt());
         return issuance == 0 ? Decimal.one() : Decimal.ratio(_fromUsdcAmount(reserveBalance()), issuance);
     }
 
@@ -120,6 +130,37 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
         _transfer(registry().usdc(), msg.sender, redeemAmount);
 
         emit Redeem(msg.sender, amount, redeemAmount);
+    }
+
+    /**
+     * @notice Lends `amount` ESD to `to` while recording the corresponding debt entry
+     * @dev Non-reentrant
+     *      Caller must be owner
+     *      Used to pre-fund trusted contracts with ESD without backing (e.g. batchers)
+     * @param account Address to send the borrowed ESD to
+     * @param amount Amount of ESD to borrow
+     */
+    function borrow(address account, uint256 amount) external onlyOwner nonReentrant {
+        require(_canBorrow(account, amount), "ReserveComptroller: cant borrow");
+
+        _incrementDebt(account, amount);
+        _mintDollar(account, amount);
+
+        emit Borrow(account, amount);
+    }
+
+    /**
+     * @notice Repays `amount` ESD on behalf of `to` while reducing its corresponding debt
+     * @dev Non-reentrant
+     * @param account Address to repay ESD on behalf of
+     * @param amount Amount of ESD to repay
+     */
+    function repay(address account, uint256 amount) external nonReentrant {
+        _decrementDebt(account, amount, "ReserveComptroller: insufficient debt");
+        _transferFrom(registry().dollar(), msg.sender, address(this), amount);
+        _burnDollar(amount);
+
+        emit Repay(account, amount);
     }
 
     // INTERNAL
@@ -209,5 +250,16 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      */
     function _fromUsdcAmount(uint256 usdcAmount) internal pure returns (uint256) {
         return usdcAmount.mul(USDC_DECIMAL_DIFF);
+    }
+
+    function _canBorrow(address account, uint256 amount) private view returns (bool) {
+        uint256 totalBorrowAmount = debt(account).add(amount);
+
+        if ( // WrapOnlyBatcher
+            account == address(0x0B663CeaCEF01f2f88EB7451C70Aa069f19dB997) &&
+            totalBorrowAmount <= 1_000_000e18
+        ) return true;
+
+        return false;
     }
 }
