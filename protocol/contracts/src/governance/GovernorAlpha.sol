@@ -34,23 +34,23 @@ contract GovernorAlpha {
 
     /// @notice The number of votes in support of a proposal required in order for a quorum to be reached and for a vote to succeed
     /// @dev Initial ESDS supply will be approximately 1.6b - 2.0b depending on initial incentive programs
-    function quorumVotes() public pure returns (uint) { return 100000000e18; } // 100,000,000 = ~5% of Stake
+    function quorumVotes() public pure returns (uint) { return 200_000_000e18; } // ~10% of Stake
 
     /// @notice The number of votes required in order for a voter to become a proposer
-    function proposalThreshold() public pure returns (uint) { return 10000000e18; } // 10,000,000 = ~0.5% of Stake
-
-    /*
-     * audit-info: End of modified code section
-     */
+    function proposalThreshold() public pure returns (uint) { return 40_000_000e18; } // ~2.0% of Stake
 
     /// @notice The maximum number of actions that can be included in a proposal
     function proposalMaxOperations() public pure returns (uint) { return 10; } // 10 actions
 
     /// @notice The delay before voting on a proposal may take place, once proposed
-    function votingDelay() public pure returns (uint) { return 1; } // 1 block
+    function votingDelay() public pure returns (uint) { return 11520; } // ~2 days in blocks (assuming 15s blocks)
 
     /// @notice The duration of voting on a proposal, in blocks
-    function votingPeriod() public pure returns (uint) { return 17280; } // ~3 days in blocks (assuming 15s blocks)
+    function votingPeriod() public pure returns (uint) { return 40320; } // ~7 days in blocks (assuming 15s blocks)
+
+    /*
+     * audit-info: End of modified code section
+     */
 
     /// @notice The address of the Empty Set Dollar Protocol Timelock
     TimelockInterface public timelock;
