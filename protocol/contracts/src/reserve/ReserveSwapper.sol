@@ -66,7 +66,7 @@ contract ReserveSwapper is ReserveComptroller {
      * @param takerToken Token that the caller wishes to sell
      * @param takerAmount Amount of takerToken to sell
      */
-    function swap(address makerToken, address takerToken, uint256 takerAmount) external nonReentrant {
+    function swap(address makerToken, address takerToken, uint256 takerAmount) external nonReentrant notPaused {
         address dollar = registry().dollar();
         require(makerToken != dollar, "ReserveSwapper: unsupported token");
         require(takerToken != dollar, "ReserveSwapper: unsupported token");

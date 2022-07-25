@@ -42,6 +42,11 @@ contract Implementation {
     event PauserUpdated(address newPauser);
 
     /**
+     * @notice Emitted when {paused} is updated with `newPaused`
+     */
+    event PausedUpdated(bool newPaused);
+
+    /**
      * @dev Storage slot with the address of the current implementation
      * This is the keccak-256 hash of "eip1967.proxy.implementation" subtracted by 1
      */
@@ -218,7 +223,7 @@ contract Implementation {
      * @dev owner only - governance hook
      * @param newPauser New pauser address
      */
-    function setOwner(address newPauser) external onlyOwner {
+    function setPauser(address newPauser) external onlyOwner {
         require(newPauser != address(this), "Implementation: this");
 
         _setPauser(newPauser);
@@ -242,10 +247,10 @@ contract Implementation {
      * @notice Pauser address with pausing permission over this contract
      * @return Pauser address
      */
-    function pauser() public view returns (address o) {
+    function pauser() public view returns (address p) {
         bytes32 slot = PAUSER_SLOT;
         assembly {
-            o := sload(slot)
+            p := sload(slot)
         }
     }
 
@@ -261,33 +266,33 @@ contract Implementation {
     // PAUSED
 
     /**
-     * @notice Updates the paused flag
+     * @notice Updates the paused status
      * @dev pauser only
-     * @param newPaused New paused stated
+     * @param newPaused New paused status
      */
     function setPaused(bool newPaused) external onlyPauser {
         require(newPaused != paused(), "Implementation: same state");
 
         _setPaused(newPaused);
 
-        emit OwnerUpdate(newPauser);
+        emit PausedUpdated(newPaused);
     }
 
     /**
-     * @notice Updates the pauser address
+     * @notice Updates the paused status
      * @dev Internal only
-     * @param newPauser New pauser address
+     * @param newPaused New paused status
      */
-    function _setPaused(bool paused) internal {
+    function _setPaused(bool newPaused) internal {
         bytes32 position = PAUSED_SLOT;
         assembly {
-            sstore(position, paused)
+            sstore(position, newPaused)
         }
     }
 
     /**
      * @notice The paused status
-     * @return p paused status
+     * @return paused status
      */
     function paused() public view returns (bool p) {
         bytes32 slot = PAUSED_SLOT;
@@ -299,8 +304,8 @@ contract Implementation {
     /**
      * @dev Only allow when the the implementation is not paused
      */
-    modifier onlyUnpaused {
-        reqire(!paused(), "Implementation: paused");
+    modifier notPaused {
+        require(!paused(), "Implementation: paused");
 
         _;
     }

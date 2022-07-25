@@ -50,7 +50,7 @@ contract ReserveIssuer is ReserveAccessors {
      * @param account Account to mint ESDS to
      * @param amount Amount of ESDS to mint
      */
-    function mintStake(address account, uint256 amount) public onlyOwner {
+    function mintStake(address account, uint256 amount) public onlyOwner notPaused {
         address stake = registry().stake();
 
         IManagedToken(stake).mint(amount);
@@ -64,7 +64,7 @@ contract ReserveIssuer is ReserveAccessors {
      * @dev Non-reentrant
      *      Owner only - governance hook
      */
-    function burnStake() public onlyOwner {
+    function burnStake() public onlyOwner notPaused {
         address stake = registry().stake();
 
         uint256 stakeBalance = IERC20(stake).balanceOf(address(this));
