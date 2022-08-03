@@ -50,7 +50,7 @@ contract ReserveSwapper is ReserveComptroller {
      * @param price Price as a ratio of takerAmount:makerAmount times 10^18
      * @param amount Amount of the makerToken that reserve wishes to sell - uint256(-1) indicates all reserve funds
      */
-    function registerOrder(address makerToken, address takerToken, uint256 price, uint256 amount) external onlyOwner {
+    function registerOrder(address makerToken, address takerToken, uint256 price, uint256 amount) external onlyOwner notPaused {
         _updateOrder(makerToken, takerToken, price, amount);
 
         emit OrderRegistered(makerToken, takerToken, price, amount);

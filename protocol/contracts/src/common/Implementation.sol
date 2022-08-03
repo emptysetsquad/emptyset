@@ -39,12 +39,12 @@ contract Implementation {
     /**
      * @notice Emitted when {pauser} is updated with `newPauser`
      */
-    event PauserUpdated(address newPauser);
+    event PauserUpdate(address newPauser);
 
     /**
      * @notice Emitted when {paused} is updated with `newPaused`
      */
-    event PausedUpdated(bool newPaused);
+    event PausedUpdate(bool newPaused);
 
     /**
      * @dev Storage slot with the address of the current implementation
@@ -228,7 +228,7 @@ contract Implementation {
 
         _setPauser(newPauser);
 
-        emit PauserUpdated(newPauser);
+        emit PauserUpdate(newPauser);
     }
 
     /**
@@ -275,7 +275,7 @@ contract Implementation {
 
         _setPaused(newPaused);
 
-        emit PausedUpdated(newPaused);
+        emit PausedUpdate(newPaused);
     }
 
     /**

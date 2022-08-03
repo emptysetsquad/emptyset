@@ -14,7 +14,7 @@ const MAX_256 = new BN(2).pow(new BN(256)).sub(new BN(1));
 describe('ReserveSwapper', function () {
   this.timeout(10000);
 
-  const [ ownerAddress, userAddress ] = accounts;
+  const [ ownerAddress, userAddress, pauserAddress ] = accounts;
 
   beforeEach(async function () {
     this.registry = await Registry.new({from: ownerAddress});
@@ -100,6 +100,24 @@ describe('ReserveSwapper', function () {
           ONE_BIP.mul(new BN(10000)),
           ONE_UNIT.mul(new BN(1000)),
           {from: userAddress}), "Implementation: not owner");
+      });
+    });
+
+    describe('when paused', function () {
+      beforeEach(async function () {
+        await this.swapper.setPauser(pauserAddress, {from: ownerAddress});
+        await this.swapper.setPaused(true, {from: pauserAddress});
+      });
+
+      it('reverts', async function () {
+        await expectRevert(
+            this.swapper.registerOrder(
+                this.tokenA.address,
+                this.tokenB.address,
+                ONE_BIP.mul(new BN(10000)),
+                ONE_BIP.mul(new BN(10000)).mul(new BN(1000)),
+                {from: ownerAddress}),
+            "Implementation: paused");
       });
     });
   });
@@ -232,6 +250,23 @@ describe('ReserveSwapper', function () {
           this.tokenB.address,
           ONE_UNIT.mul(new BN(600)),
           {from: userAddress}), "ReserveSwapper: tokens equal");
+      });
+    });
+
+    describe('when paused', function () {
+      beforeEach(async function () {
+        await this.swapper.setPauser(pauserAddress, {from: ownerAddress});
+        await this.swapper.setPaused(true, {from: pauserAddress});
+      });
+
+      it('reverts', async function () {
+        await expectRevert(
+            this.swapper.swap(
+                this.tokenB.address,
+                this.tokenA.address,
+                ONE_UNIT.mul(new BN(1100)),
+                {from: userAddress}),
+            "Implementation: paused");
       });
     });
   });

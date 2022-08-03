@@ -11,7 +11,7 @@ const ONE_BIP = new BN(10).pow(new BN(14));
 const ONE_UNIT = ONE_BIP.mul(new BN(10000));
 
 describe('ReserveIssuer', function () {
-  const [ ownerAddress, userAddress ] = accounts;
+  const [ ownerAddress, userAddress, pauserAddress ] = accounts;
 
   beforeEach(async function () {
     this.registry = await Registry.new({from: ownerAddress});
@@ -51,6 +51,19 @@ describe('ReserveIssuer', function () {
           "Implementation: not owner");
       });
     });
+
+    describe('when paused', function () {
+      beforeEach(async function () {
+        await this.issuer.setPauser(pauserAddress, {from: ownerAddress});
+        await this.issuer.setPaused(true, {from: pauserAddress});
+      });
+
+      it('reverts', async function () {
+        await expectRevert(
+            this.issuer.mintStake(userAddress, ONE_UNIT.mul(new BN(100000)), {from: ownerAddress}),
+            "Implementation: paused");
+      });
+    });
   });
 
   describe('burnStake', function () {
@@ -83,6 +96,19 @@ describe('ReserveIssuer', function () {
         await expectRevert(
           this.issuer.burnStake({from: userAddress}),
           "Implementation: not owner");
+      });
+    });
+
+    describe('when paused', function () {
+      beforeEach(async function () {
+        await this.issuer.setPauser(pauserAddress, {from: ownerAddress});
+        await this.issuer.setPaused(true, {from: pauserAddress});
+      });
+
+      it('reverts', async function () {
+        await expectRevert(
+            this.issuer.burnStake({from: ownerAddress}),
+            "Implementation: paused");
       });
     });
   });
