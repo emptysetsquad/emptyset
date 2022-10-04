@@ -15,7 +15,7 @@ const ONE_BIP = new BN(10).pow(new BN(14));
 const ONE_UNIT = ONE_BIP.mul(new BN(10000));
 
 describe('ReserveVault', function () {
-  const [ ownerAddress, userAddress, delegateAddress ] = accounts;
+  const [ ownerAddress, userAddress, delegateAddress, pauserAddress ] = accounts;
 
   beforeEach(async function () {
     this.registry = await Registry.new({from: ownerAddress});
@@ -185,6 +185,19 @@ describe('ReserveVault', function () {
         await expectRevert(this.vault.claimVault({from: userAddress}), "Implementation: not owner");
       });
     });
+
+    describe('when paused', function () {
+      beforeEach(async function () {
+        await this.vault.setPauser(pauserAddress, {from: ownerAddress});
+        await this.vault.setPaused(true, {from: pauserAddress});
+      });
+
+      it('reverts', async function () {
+        await expectRevert(
+            this.vault.claimVault({from: ownerAddress}),
+            "Implementation: paused");
+      });
+    });
   });
 
   describe('delegateVault', function () {
@@ -206,6 +219,19 @@ describe('ReserveVault', function () {
     describe('not owner', function () {
       it('reverts', async function () {
         await expectRevert(this.vault.delegateVault(this.comp.address, delegateAddress, {from: userAddress}), "Implementation: not owner");
+      });
+    });
+
+    describe('when paused', function () {
+      beforeEach(async function () {
+        await this.vault.setPauser(pauserAddress, {from: ownerAddress});
+        await this.vault.setPaused(true, {from: pauserAddress});
+      });
+
+      it('reverts', async function () {
+        await expectRevert(
+            this.vault.delegateVault(this.comp.address, delegateAddress, {from: ownerAddress}),
+            "Implementation: paused");
       });
     });
   });

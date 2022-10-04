@@ -50,7 +50,7 @@ contract ReserveSwapper is ReserveComptroller {
      * @param price Price as a ratio of takerAmount:makerAmount times 10^18
      * @param amount Amount of the makerToken that reserve wishes to sell - uint256(-1) indicates all reserve funds
      */
-    function registerOrder(address makerToken, address takerToken, uint256 price, uint256 amount) external onlyOwner {
+    function registerOrder(address makerToken, address takerToken, uint256 price, uint256 amount) external onlyOwner notPaused {
         _updateOrder(makerToken, takerToken, price, amount);
 
         emit OrderRegistered(makerToken, takerToken, price, amount);
@@ -66,7 +66,7 @@ contract ReserveSwapper is ReserveComptroller {
      * @param takerToken Token that the caller wishes to sell
      * @param takerAmount Amount of takerToken to sell
      */
-    function swap(address makerToken, address takerToken, uint256 takerAmount) external nonReentrant {
+    function swap(address makerToken, address takerToken, uint256 takerAmount) external nonReentrant notPaused {
         address dollar = registry().dollar();
         require(makerToken != dollar, "ReserveSwapper: unsupported token");
         require(takerToken != dollar, "ReserveSwapper: unsupported token");

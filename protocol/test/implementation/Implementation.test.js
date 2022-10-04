@@ -10,7 +10,7 @@ const Timelock = contract.fromArtifact('Timelock');
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 describe('Implementation', function () {
-  const [ ownerAddress, userAddress] = accounts;
+  const [ ownerAddress, userAddress, pauserAddress] = accounts;
 
   beforeEach(async function () {
     this.timelockA = await Timelock.new(ownerAddress, 86400 * 2, {from: ownerAddress});
@@ -170,6 +170,76 @@ describe('Implementation', function () {
         await expectRevert(
           this.implementation.setOwner(ZERO_ADDRESS, {from: ownerAddress}),
           "Implementation: not contract");
+      });
+    });
+  });
+
+  describe('setPauser', function () {
+    describe('before set', function () {
+      it('is zero address', async function () {
+        expect(await this.implementation.pauser()).to.be.equal(ZERO_ADDRESS);
+      });
+
+      describe('when called', function () {
+        beforeEach('call', async function () {
+          this.result = await this.implementation.setPauser(pauserAddress, {from: ownerAddress});
+          this.txHash = this.result.tx
+        });
+
+        it('sets new value', async function () {
+          expect(await this.implementation.pauser()).to.be.equal(pauserAddress);
+        });
+
+        it('emits PauserUpdate event', async function () {
+          const event = await expectEvent.inTransaction(this.txHash, MockImplementation, 'PauserUpdate', {
+            newPauser: pauserAddress,
+          });
+        });
+      });
+    });
+
+    describe('not owner', function () {
+      it('reverts', async function () {
+        await expectRevert(
+            this.implementation.setPauser(pauserAddress, {from: userAddress}),
+            "Implementation: not owner");
+      });
+    });
+  });
+
+  describe('setPaused', function () {
+    beforeEach('call', async function () {
+      await this.implementation.setPauser(pauserAddress, {from: ownerAddress});
+    });
+
+    describe('before set', function () {
+      it('is zero address', async function () {
+        expect(await this.implementation.paused()).to.be.equal(false);
+      });
+
+      describe('when called', function () {
+        beforeEach('call', async function () {
+          this.result = await this.implementation.setPaused(true, {from: pauserAddress});
+          this.txHash = this.result.tx
+        });
+
+        it('sets new value', async function () {
+          expect(await this.implementation.paused()).to.be.equal(true);
+        });
+
+        it('emits PausedUpdate event', async function () {
+          const event = await expectEvent.inTransaction(this.txHash, MockImplementation, 'PausedUpdate', {
+            newPaused: true,
+          });
+        });
+      });
+    });
+
+    describe('not pauser', function () {
+      it('reverts', async function () {
+        await expectRevert(
+            this.implementation.setPaused(true, {from: ownerAddress}),
+            "Implementation: not pauser");
       });
     });
   });

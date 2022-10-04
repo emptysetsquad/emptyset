@@ -37,6 +37,16 @@ contract Implementation {
     event RegistryUpdate(address newRegistry);
 
     /**
+     * @notice Emitted when {pauser} is updated with `newPauser`
+     */
+    event PauserUpdate(address newPauser);
+
+    /**
+     * @notice Emitted when {paused} is updated with `newPaused`
+     */
+    event PausedUpdate(bool newPaused);
+
+    /**
      * @dev Storage slot with the address of the current implementation
      * This is the keccak-256 hash of "eip1967.proxy.implementation" subtracted by 1
      */
@@ -54,14 +64,25 @@ contract Implementation {
     bytes32 private constant OWNER_SLOT = keccak256("emptyset.v2.implementation.owner");
 
     /**
-     * @notice Storage slot with the owner of the contract
+     * @notice Storage slot with the registry address
      */
     bytes32 private constant REGISTRY_SLOT = keccak256("emptyset.v2.implementation.registry");
 
     /**
-     * @notice Storage slot with the owner of the contract
+     * @notice Storage slot with the not-entered flag
      */
     bytes32 private constant NOT_ENTERED_SLOT = keccak256("emptyset.v2.implementation.notEntered");
+
+    /**
+     * @notice Storage slot with the pauser of the contract
+     */
+    bytes32 private constant PAUSER_SLOT = keccak256("emptyset.v2.implementation.pauser");
+
+    /**
+     * @notice Storage slot with the paused flag
+     */
+    bytes32 private constant PAUSED_SLOT = keccak256("emptyset.v2.implementation.paused");
+
 
     // UPGRADEABILITY
 
@@ -194,6 +215,102 @@ contract Implementation {
 
         _;
     }
+
+    // PAUSER
+
+    /**
+     * @notice Updates the pauser contract
+     * @dev owner only - governance hook
+     * @param newPauser New pauser address
+     */
+    function setPauser(address newPauser) external onlyOwner {
+        require(newPauser != address(this), "Implementation: this");
+
+        _setPauser(newPauser);
+
+        emit PauserUpdate(newPauser);
+    }
+
+    /**
+     * @notice Updates the pauser address
+     * @dev Internal only
+     * @param newPauser New pauser address
+     */
+    function _setPauser(address newPauser) internal {
+        bytes32 position = PAUSER_SLOT;
+        assembly {
+            sstore(position, newPauser)
+        }
+    }
+
+    /**
+     * @notice Pauser address with pausing permission over this contract
+     * @return Pauser address
+     */
+    function pauser() public view returns (address p) {
+        bytes32 slot = PAUSER_SLOT;
+        assembly {
+            p := sload(slot)
+        }
+    }
+
+    /**
+     * @dev Only allow when the caller is the pauser address
+     */
+    modifier onlyPauser {
+        require(msg.sender == pauser(), "Implementation: not pauser");
+
+        _;
+    }
+
+    // PAUSED
+
+    /**
+     * @notice Updates the paused status
+     * @dev pauser only
+     * @param newPaused New paused status
+     */
+    function setPaused(bool newPaused) external onlyPauser {
+        require(newPaused != paused(), "Implementation: same state");
+
+        _setPaused(newPaused);
+
+        emit PausedUpdate(newPaused);
+    }
+
+    /**
+     * @notice Updates the paused status
+     * @dev Internal only
+     * @param newPaused New paused status
+     */
+    function _setPaused(bool newPaused) internal {
+        bytes32 position = PAUSED_SLOT;
+        assembly {
+            sstore(position, newPaused)
+        }
+    }
+
+    /**
+     * @notice The paused status
+     * @return paused status
+     */
+    function paused() public view returns (bool p) {
+        bytes32 slot = PAUSED_SLOT;
+        assembly {
+            p := sload(slot)
+        }
+    }
+
+    /**
+     * @dev Only allow when the the implementation is not paused
+     */
+    modifier notPaused {
+        require(!paused(), "Implementation: paused");
+
+        _;
+    }
+
+
 
     // NON REENTRANT
 

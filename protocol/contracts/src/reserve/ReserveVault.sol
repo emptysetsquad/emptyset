@@ -86,7 +86,7 @@ contract ReserveVault is ReserveAccessors {
      * @dev Owner only - governance hook
      *      Claims COMP accrued from lending on the USDC pool
      */
-    function claimVault() external onlyOwner {
+    function claimVault() external onlyOwner notPaused {
         ICErc20(registry().cUsdc()).comptroller().claimComp(address(this));
     }
 
@@ -97,7 +97,7 @@ contract ReserveVault is ReserveAccessors {
      * @param token Governance token to delegate voting power
      * @param delegatee Account to receive reserve's voting power
      */
-    function delegateVault(address token, address delegatee) external onlyOwner {
+    function delegateVault(address token, address delegatee) external onlyOwner notPaused {
         IGovToken(token).delegate(delegatee);
     }
 }

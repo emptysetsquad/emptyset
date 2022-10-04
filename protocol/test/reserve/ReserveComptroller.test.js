@@ -18,7 +18,7 @@ describe('ReserveComptroller', function () {
   this.retries(10)
   this.timeout(20000)
 
-  const [ ownerAddress, userAddress, comptroller, burnAddress ] = accounts;
+  const [ ownerAddress, userAddress, comptroller, burnAddress, pauserAddress ] = accounts;
 
   beforeEach(async function () {
     this.registry = await Registry.new({from: ownerAddress});
@@ -122,6 +122,19 @@ describe('ReserveComptroller', function () {
 
         expect(event.args.mintAmount).to.be.bignumber.equal(ONE_UNIT.mul(new BN(100000)));
         expect(event.args.costAmount).to.be.bignumber.equal(ONE_USDC.mul(new BN(100000)));
+      });
+    });
+
+    describe('when paused', function () {
+      beforeEach(async function () {
+        await this.comptroller.setPauser(pauserAddress, {from: ownerAddress});
+        await this.comptroller.setPaused(true, {from: pauserAddress});
+      });
+
+      it('reverts', async function () {
+        await expectRevert(
+            this.comptroller.mint(ONE_UNIT.mul(new BN(100000)), {from: userAddress}),
+            "Implementation: paused");
       });
     });
   });
@@ -249,6 +262,19 @@ describe('ReserveComptroller', function () {
         expect(event.args.costAmount).to.be.bignumber.equal(ONE_UNIT.mul(new BN(100000)));
       });
     });
+
+    describe('when paused', function () {
+      beforeEach(async function () {
+        await this.comptroller.setPauser(pauserAddress, {from: ownerAddress});
+        await this.comptroller.setPaused(true, {from: pauserAddress});
+      });
+
+      it('reverts', async function () {
+        await expectRevert(
+            this.comptroller.redeem(ONE_UNIT.mul(new BN(100000)), {from: userAddress}),
+            "Implementation: paused");
+      });
+    });
   });
 
   describe('borrow', function () {
@@ -334,6 +360,19 @@ describe('ReserveComptroller', function () {
             "Implementation: not owner");
       });
     });
+
+    describe('when paused', function () {
+      beforeEach(async function () {
+        await this.comptroller.setPauser(pauserAddress, {from: ownerAddress});
+        await this.comptroller.setPaused(true, {from: pauserAddress});
+      });
+
+      it('reverts', async function () {
+        await expectRevert(
+            this.comptroller.borrow(BATCHER_ADDRESS, ONE_UNIT.mul(new BN(100000)), {from: ownerAddress}),
+            "Implementation: paused");
+      });
+    });
   });
 
   describe('repay', function () {
@@ -393,6 +432,19 @@ describe('ReserveComptroller', function () {
         });
 
         expect(event.args.repayAmount).to.be.bignumber.equal(ONE_UNIT.mul(new BN(100000)));
+      });
+    });
+
+    describe('when paused', function () {
+      beforeEach(async function () {
+        await this.comptroller.setPauser(pauserAddress, {from: ownerAddress});
+        await this.comptroller.setPaused(true, {from: pauserAddress});
+      });
+
+      it('reverts', async function () {
+        await expectRevert(
+            this.comptroller.repay(BATCHER_ADDRESS, ONE_UNIT.mul(new BN(100000)), {from: BATCHER_ADDRESS}),
+            "Implementation: paused");
       });
     });
   });

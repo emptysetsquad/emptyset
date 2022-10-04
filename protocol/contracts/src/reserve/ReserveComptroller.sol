@@ -101,7 +101,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      *      Caller must approve reserve to transfer USDC
      * @param amount Amount of ESD to mint
      */
-    function mint(uint256 amount) external nonReentrant {
+    function mint(uint256 amount) external nonReentrant notPaused {
         uint256 costAmount = _toUsdcAmount(amount);
 
         // Take the ceiling to ensure no "free" ESD is minted
@@ -121,7 +121,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      *      Caller must approve reserve to transfer ESD
      * @param amount Amount of ESD to mint
      */
-    function redeem(uint256 amount) external nonReentrant {
+    function redeem(uint256 amount) external nonReentrant notPaused {
         uint256 redeemAmount = _toUsdcAmount(redeemPrice().mul(amount).asUint256());
 
         _transferFrom(registry().dollar(), msg.sender, address(this), amount);
@@ -140,7 +140,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @param account Address to send the borrowed ESD to
      * @param amount Amount of ESD to borrow
      */
-    function borrow(address account, uint256 amount) external onlyOwner nonReentrant {
+    function borrow(address account, uint256 amount) external onlyOwner nonReentrant notPaused {
         require(_canBorrow(account, amount), "ReserveComptroller: cant borrow");
 
         _incrementDebt(account, amount);
@@ -155,7 +155,7 @@ contract ReserveComptroller is ReserveAccessors, ReserveVault {
      * @param account Address to repay ESD on behalf of
      * @param amount Amount of ESD to repay
      */
-    function repay(address account, uint256 amount) external nonReentrant {
+    function repay(address account, uint256 amount) external nonReentrant notPaused {
         _decrementDebt(account, amount, "ReserveComptroller: insufficient debt");
         _transferFrom(registry().dollar(), msg.sender, address(this), amount);
         _burnDollar(amount);
